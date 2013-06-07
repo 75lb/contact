@@ -1,0 +1,9 @@
+{
+  "name": "contact",
+  "version": "0.0.0",
+  "description": "",
+  "bin": "contact.js",
+  "repository": "",
+  "author": "",
+  "license": "BSD"
+}
