@@ -1,8 +1,10 @@
+#!/usr/bin/env node
 var net = require("net"),
     readline = require("readline"),
     rl = readline.createInterface({ input: process.stdin, output: process.stdout });
     
-var l = console.log;
+var l = console.log,
+    port = 6667;
 
 if (process.argv[2] === "-l"){
     var server = net.createServer(function(c){
@@ -25,10 +27,10 @@ if (process.argv[2] === "-l"){
             process.exit(0);
         });
     
-    }).listen(2001);
+    }).listen(port);
     
 } else {
-    var client = net.connect({ port: 2001 }, function(){
+    var client = net.connect({ port: port, host: process.argv[2] }, function(){
         l("client connected");
         rl.prompt();
         rl.on("line", function(line){
