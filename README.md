@@ -1,3 +1,5 @@
+***under construction***
+
 Contact
 =======
 Say you want to chat in private with a friend over a direct, peer-to-peer connection with zero intrusion. Contact's job is to open a direct, secure connection over which you can chat. That's it. 

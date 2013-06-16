@@ -37,6 +37,12 @@ function User(ip, name){
     this.name = name;
 }
 
+/**
+View innerface:
+prompt()
+showMessage()
+-> input(line)
+*/
 function TerminalView(){
     var self = this;
     rl.on("line", function(line){
