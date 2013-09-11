@@ -5,31 +5,30 @@ var $ = document.querySelector.bind(document);
 function l(msg){ console.log(msg); }
 
 function Connection(options){
-    this.onOpen = options.onOpen;
-    this.onClose = options.onClose;
-    this.onData = options.onData;
-    this.onError = options.onError;
+    this.onOpen = null;
+    this.onClose = null;
+    this.onData = null;
+    this.onError = null;
     this.send = null;
 }
 
 function WebTransport(){
-    this.getConnection = function(with, callback){
-        var connection = new Connection({
-            onOpen: function(){
-                l("OPEN");
-            },
-            onClose: function(){
-                l("CLOSE");
-            },
-            onData: function(data){
-                l("DATA", data)
-            },
-            onError: function(err){
-                l("ERROR", err);
-            }
-        });
+    this.getConnection = function(withUri, callback){
+        var connection = new Connection();
+        connection.onOpen = function(){
+            l("OPEN");
+        };
+        connection.onClose = function(){
+            l("CLOSE");
+        };
+        connection.onData = function(data){
+            l("DATA:" + data.data);
+        };
+        connection.onError = function(err){
+            l("ERROR", err);
+        };
         
-        var socket = new WebSocket(with);
+        var socket = new WebSocket(withUri);
         socket.onopen = connection.onOpen;
         socket.onclose = connection.onClose;
         socket.onmessage = connection.onData;
@@ -51,6 +50,8 @@ function Session(options){
     l("New Session with: " + options.with);
     this.state = "disconnected";
     this.with = options.with;
+    this.connection = null;
+    this.onIncoming = null;
 
     this.disconnect = function(){ 
         l("session disconnected");
@@ -59,25 +60,29 @@ function Session(options){
     this.send = function(msg){
         this.connection.send(msg);
     };
-    this.incomingMsg = function(msg){
-        this.emit("incomingMsg", msg);
-    };
     
     options.transport.getConnection(this.with, function(connection){
         self.state = "connected";
+        self.connection = connection;
+        connection.onData = function(msg){
+            self.onIncoming(msg);
+        }
         options.onConnected(connection);
     });
 }
 
-function WebView(onInput){
+function WebView(){
+    this.onInput = null;
+
     var message = $("#message"),
-        log = $("#log");
+        log = $("#log"),
+        self = this;
         
     message.focus();
     
     $("#inputForm").addEventListener("submit", function(e){
         e.preventDefault();
-        onInput(message.value);
+        self.onInput(message.value);
         message.value = "";
     });
     
@@ -86,6 +91,8 @@ function WebView(onInput){
         li.textContent = msg;
         log.appendChild(li);
     };
+    
+    return this;
 }
 
 var session = new Session({
@@ -97,8 +104,13 @@ var session = new Session({
 });
 
 
-var view = new WebView(function(input){
-    l(input);
-});
+var view = new WebView();
+view.onInput = function(input){
+    session.send(input);
+};
+
+session.onIncoming = function(msg){
+    view.write(msg);
+};
 
 // })();
