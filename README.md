@@ -24,3 +24,4 @@ $ connect <ip>
 ```
 
 [![githalytics.com alpha](https://cruel-carlota.pagodabox.com/edfb933b1e0a698ebac84ebc658732f3 "githalytics.com")](http://githalytics.com/75lb/contact)
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/75lb/contact/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
