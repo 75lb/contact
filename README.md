@@ -1,3 +1,7 @@
+[![NPM version](https://badge.fury.io/js/contact.png)](http://badge.fury.io/js/contact)
+[![Dependency Status](https://david-dm.org/75lb/contact.png)](https://david-dm.org/75lb/contact)
+![Analytics](https://ga-beacon.appspot.com/UA-27725889-13/contact/README.md?pixel)
+
 ***under construction***
 
 Contact
@@ -22,6 +26,3 @@ $ connect -l
 ```sh
 $ connect <ip>
 ```
-
-[![githalytics.com alpha](https://cruel-carlota.pagodabox.com/edfb933b1e0a698ebac84ebc658732f3 "githalytics.com")](http://githalytics.com/75lb/contact)
-[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/75lb/contact/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
