@@ -1,18 +1,22 @@
 #!/usr/bin/env node
+
 "use strict";
 var net = require("net"),
     readline = require("readline"),
     EventEmitter = require("events").EventEmitter,
     util = require("util"),
     rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-    
+
 var l = console.log,
     port = 6667;
 
 /**
+A chat session. Survives disconnects.
+
 State Machine:
 disconnected -> connected -> disconnected
 connected -> typing -> connected
+@constructor
 */
 function Session(speakingTo, socket){
     var self = this;
@@ -20,7 +24,7 @@ function Session(speakingTo, socket){
     this.state = "connected";
     this.speakingTo = speakingTo;
     this.socket = socket;
-    this.disconnect = function(){ 
+    this.disconnect = function(){
         l("session disconnected");
     };
     this.send = function(msg){
@@ -38,10 +42,13 @@ function User(ip, name){
 }
 
 /**
-View innerface:
-prompt()
+The main chat user interface (collection and display of messages)
+
+innerface:
 showMessage()
--> input(line)
+event-> input(line)
+
+@constructor
 */
 function TerminalView(){
     var self = this;
@@ -52,32 +59,32 @@ function TerminalView(){
     rl.on("close", function(){
         process.exit(0);
     });
-    this.prompt = function(){
-        rl.prompt();
-    };
     this.showMessage = function(msg){
         rl.pause();
         l("\n" + msg.toString());
         rl.prompt(true);
         rl.resume();
     };
-    
+    rl.prompt();
 }
 util.inherits(TerminalView, EventEmitter);
 
-function Manager(transport, view){
-    transport[process.argv[2] === "-l" ? "listen" : "connect"](function(session){
-        view.prompt();
-        view.on("input", function(msg){
-            session.send(msg);
-        });
-        session.on("incomingMsg", function(msg){
-            view.showMessage(msg);
-        });
-    });
-}
+/**
+Transport interface.
 
+@class
+*/
 function NodeTransport(){
+    /**
+    Called when a connection is made
+    @callback NodeTransport~listenCallback
+    @param {Session} session 
+    */
+    
+    /**
+    Waits for an incoming connection
+    @param {NodeTransport~listenCallback} callback Fired on connection
+    */
     this.listen = function(callback){
         l("listening on port " + port);
         var server = net.createServer(function(socket){
@@ -92,6 +99,11 @@ function NodeTransport(){
             callback(session);
         }).listen(port);
     };
+
+    /**
+    Connect to a listening contact
+    @param {NodeTransport~listenCallback} callback Fired on connection
+    */
     this.connect = function(callback){
         var socket = net.connect({ port: port, host: process.argv[2] }, function(){
             var session = new Session(
@@ -105,6 +117,20 @@ function NodeTransport(){
             callback(session);
         });
     }
+    
+    
+}
+
+function Manager(transport, view){
+    transport[process.argv[2] === "-l" ? "listen" : "connect"](function(session){
+        view.on("input", function(msg){
+            session.send(msg);
+        });
+        session.on("incomingMsg", function(msg){
+            view.showMessage(msg);
+        });
+    });
 }
 
 Manager(new NodeTransport(), new TerminalView());
+

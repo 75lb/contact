@@ -4,6 +4,5 @@
   "description": "simple, peer-to-peer command line chat",
   "bin": "contact.js",
   "repository": "https://github.com/75lb/contact",
-  "author": "Lloyd Brookes",
-  "license": "BSD"
+  "author": "Lloyd Brookes"
 }

@@ -27,7 +27,7 @@ function WebTransport(){
         connection.onError = function(err){
             l("ERROR", err);
         };
-        
+
         var socket = new WebSocket(withUri);
         socket.onopen = connection.onOpen;
         socket.onclose = connection.onClose;
@@ -42,7 +42,7 @@ function WebTransport(){
 }
 
 /**
-state machine: 
+state machine:
 disconnected -> connected -> typing
 */
 function Session(options){
@@ -53,14 +53,14 @@ function Session(options){
     this.connection = null;
     this.onIncoming = null;
 
-    this.disconnect = function(){ 
+    this.disconnect = function(){
         l("session disconnected");
         self.state = "disconnected";
     };
     this.send = function(msg){
         this.connection.send(msg);
     };
-    
+
     options.transport.getConnection(this.with, function(connection){
         self.state = "connected";
         self.connection = connection;
@@ -77,21 +77,21 @@ function WebView(){
     var message = $("#message"),
         log = $("#log"),
         self = this;
-        
+
     message.focus();
-    
+
     $("#inputForm").addEventListener("submit", function(e){
         e.preventDefault();
         self.onInput(message.value);
         message.value = "";
     });
-    
+
     this.write = function(msg){
         var li = document.createElement("li");
         li.textContent = msg;
         log.appendChild(li);
     };
-    
+
     return this;
 }
 
