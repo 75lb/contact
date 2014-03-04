@@ -1,8 +1,8 @@
-var TransportWeb = require("./lib/TransportWeb");
-
-var $ = document.querySelector.bind(document);
+var TransportWeb = require("./lib/TransportWeb"),
+    ViewWeb = require("./lib/ViewWeb");
 
 var transport = new TransportWeb(),
+    view = new ViewWeb(),
     options = { 
         host: "localhost",
         port: 4444
@@ -11,7 +11,10 @@ var transport = new TransportWeb(),
 transport.connect(options, function(session){
     console.log("BOOM");
     session.on("incomingMsg", function(msg){
-        console.log(msg);
+        view.showMessage(msg);
+    });
+    view.on("input", function(msg){
+        session.send(msg);
     });
 });
 
