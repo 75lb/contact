@@ -1,4 +1,4 @@
-// (function(){
+var WebTransport = require("./lib/WebTransport");
 
 var $ = document.querySelector.bind(document);
 
@@ -12,34 +12,7 @@ function Connection(options){
     this.send = null;
 }
 
-function WebTransport(){
-    this.getConnection = function(withUri, callback){
-        var connection = new Connection();
-        connection.onOpen = function(){
-            l("OPEN");
-        };
-        connection.onClose = function(){
-            l("CLOSE");
-        };
-        connection.onData = function(data){
-            l("DATA:" + data.data);
-        };
-        connection.onError = function(err){
-            l("ERROR", err);
-        };
 
-        var socket = new WebSocket(withUri);
-        socket.onopen = connection.onOpen;
-        socket.onclose = connection.onClose;
-        socket.onmessage = connection.onData;
-        socket.onerror = connection.onError;
-
-        connection.send = function(msg){
-            socket.send(msg);
-        }
-        callback(connection);
-    }
-}
 
 /**
 state machine:
@@ -112,5 +85,3 @@ view.onInput = function(input){
 session.onIncoming = function(msg){
     view.write(msg);
 };
-
-// })();
