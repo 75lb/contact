@@ -44,30 +44,6 @@ function Session(options){
     });
 }
 
-function WebView(){
-    this.onInput = null;
-
-    var message = $("#message"),
-        log = $("#log"),
-        self = this;
-
-    message.focus();
-
-    $("#inputForm").addEventListener("submit", function(e){
-        e.preventDefault();
-        self.onInput(message.value);
-        message.value = "";
-    });
-
-    this.write = function(msg){
-        var li = document.createElement("li");
-        li.textContent = msg;
-        log.appendChild(li);
-    };
-
-    return this;
-}
-
 var session = new Session({
     with: "ws://localhost:4444",
     transport: new WebTransport(),
