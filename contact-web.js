@@ -1,63 +1,77 @@
-var WebTransport = require("./lib/WebTransport");
+var TransportWeb = require("./lib/TransportWeb");
 
 var $ = document.querySelector.bind(document);
 
-function l(msg){ console.log(msg); }
-
-function Connection(options){
-    this.onOpen = null;
-    this.onClose = null;
-    this.onData = null;
-    this.onError = null;
-    this.send = null;
-}
-
-
-
-/**
-state machine:
-disconnected -> connected -> typing
-*/
-function Session(options){
-    var self = this;
-    l("New Session with: " + options.with);
-    this.state = "disconnected";
-    this.with = options.with;
-    this.connection = null;
-    this.onIncoming = null;
-
-    this.disconnect = function(){
-        l("session disconnected");
-        self.state = "disconnected";
-    };
-    this.send = function(msg){
-        this.connection.send(msg);
+var transport = new TransportWeb(),
+    options = { 
+        host: "localhost",
+        port: 4444
     };
 
-    options.transport.getConnection(this.with, function(connection){
-        self.state = "connected";
-        self.connection = connection;
-        connection.onData = function(msg){
-            self.onIncoming(msg);
-        }
-        options.onConnected(connection);
+transport.connect(options, function(session){
+    console.log("BOOM");
+    session.on("incomingMsg", function(msg){
+        console.log(msg);
     });
-}
-
-var session = new Session({
-    with: "ws://localhost:4444",
-    transport: new WebTransport(),
-    onConnected: function(connection){
-        l("connected", connection);
-    }
 });
 
 
-var view = new WebView();
-view.onInput = function(input){
-    session.send(input);
-};
-
-session.onIncoming = function(msg){
-    view.write(msg);
-};
+// function l(msg){ console.log(msg); }
+// 
+// function Connection(options){
+//     this.onOpen = null;
+//     this.onClose = null;
+//     this.onData = null;
+//     this.onError = null;
+//     this.send = null;
+// }
+// 
+// 
+// 
+// /**
+// state machine:
+// disconnected -> connected -> typing
+// */
+// function Session(options){
+//     var self = this;
+//     l("New Session with: " + options.with);
+//     this.state = "disconnected";
+//     this.with = options.with;
+//     this.connection = null;
+//     this.onIncoming = null;
+// 
+//     this.disconnect = function(){
+//         l("session disconnected");
+//         self.state = "disconnected";
+//     };
+//     this.send = function(msg){
+//         this.connection.send(msg);
+//     };
+// 
+//     options.transport.getConnection(this.with, function(connection){
+//         self.state = "connected";
+//         self.connection = connection;
+//         connection.onData = function(msg){
+//             self.onIncoming(msg);
+//         }
+//         options.onConnected(connection);
+//     });
+// }
+// 
+// var session = new Session({
+//     with: "ws://localhost:4444",
+//     transport: new TransportWeb(),
+//     onConnected: function(connection){
+//         l("connected", connection);
+//     }
+// });
+// 
+// 
+// var view = new WebView();
+// view.onInput = function(input){
+//     session.send(input);
+// };
+// 
+// session.onIncoming = function(msg){
+//     view.write(msg);
+// };

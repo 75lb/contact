@@ -4,5 +4,8 @@
   "description": "simple, peer-to-peer command line chat",
   "bin": "contact.js",
   "repository": "https://github.com/75lb/contact",
-  "author": "Lloyd Brookes"
+  "author": "Lloyd Brookes",
+  "dependencies": {
+    "ws-server": "^0.1.2"
+  }
 }

@@ -11,7 +11,7 @@ var transport = new TransportNode(),
         port: 6667
     };
 
-function monitorSession(session){
+function handleSession(session){
     view.on("input", function(msg){
         session.send(msg);
     });
@@ -21,7 +21,7 @@ function monitorSession(session){
 }
 
 if (process.argv[2] === "-l") {
-    transport.listen(options, monitorSession)
+    transport.listen(options, handleSession)
 } else {
-    transport.connect(options, monitorSession)
+    transport.connect(options, handleSession)
 }
