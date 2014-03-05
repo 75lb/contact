@@ -5,11 +5,7 @@ var TransportNode = require("./lib/TransportNode"),
     ViewTerminal = require("./lib/ViewTerminal");
 
 var transport = new TransportNode(),
-    view = new ViewTerminal(),
-    options = { 
-        host: process.argv[2], 
-        port: process.env.PORT || 5000
-    };
+    view = new ViewTerminal();
 
 function handleSession(session){
     view.on("input", function(msg){
@@ -21,7 +17,7 @@ function handleSession(session){
 }
 
 if (process.argv[2] === "-l") {
-    transport.listen(options, handleSession)
+    transport.listen({ port: process.env.PORT || 5000 }, handleSession);
 } else {
-    transport.connect(options, handleSession)
+    transport.connect({ port: process.argv[3] || 80, host: process.argv[2] }, handleSession);
 }
