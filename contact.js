@@ -8,7 +8,7 @@ var transport = new TransportNode(),
     view = new ViewTerminal(),
     options = { 
         host: process.argv[2], 
-        port: 6667
+        port: process.env.PORT || 5000
     };
 
 function handleSession(session){
