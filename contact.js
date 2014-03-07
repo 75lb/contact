@@ -7,7 +7,7 @@ var Thing = require("nature").Thing,
     TransportWeb = require("./lib/TransportWeb");
 
 var argv = new Thing()
-    .define({ name: "user", type: "string", value: "Lloyd" })
+    .define({ name: "user", type: "string", alias: "u", value: "Lloyd" })
     .set(process.argv);    
 
 var transport = new TransportWeb();
