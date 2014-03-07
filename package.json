@@ -1,11 +1,12 @@
 {
   "name": "contact",
   "version": "0.0.1",
-  "description": "simple, peer-to-peer command line chat",
+  "description": "simple, one-to-one or one-to-many command line chat",
   "bin": "contact.js",
   "repository": "https://github.com/75lb/contact",
   "author": "Lloyd Brookes",
   "dependencies": {
-    "ws-server": "^0.1.2"
+    "ws": "^0.4.31",
+    "nature": "~0.3.1"
   }
 }
