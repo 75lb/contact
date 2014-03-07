@@ -1,9 +1,14 @@
 #!/usr/bin/env node
 
 "use strict";
-var TransportNode = require("./lib/TransportNode"),
+var Thing = require("nature").Thing,
+    TransportNode = require("./lib/TransportNode"),
     ViewTerminal = require("./lib/ViewTerminal"),
     TransportWeb = require("./lib/TransportWeb");
+
+var argv = new Thing()
+    .define({ name: "user", type: "string", value: "Lloyd" })
+    .set(process.argv);    
 
 var transport = new TransportWeb(),
     view = new ViewTerminal();
@@ -15,6 +20,7 @@ var transport = new TransportWeb(),
 // }
 
 transport.connect({ host: "serene-stream-2466.herokuapp.com" }, function(session){
+    session.me = argv.user;
     view.on("input", session.send.bind(session));
     session.on("incomingMsg", view.showMessage.bind(view));
 });
