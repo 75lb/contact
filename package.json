@@ -1,6 +1,6 @@
 {
   "name": "contact",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "simple, one-to-one or one-to-many command line chat",
   "bin": "contact.js",
   "repository": "https://github.com/75lb/contact",
