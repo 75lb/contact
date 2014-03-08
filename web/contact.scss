@@ -1,0 +1,31 @@
+@import "variables", "normalise", "list", "containers", "grid", "util", "responsive";
+
+.screen {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+
+    & > * { border: 1px solid white; }
+    header {
+        flex-basis: 10em;
+        background-color: rgba(100, 0, 0, 0.3);
+    }
+    article {
+        flex-grow: 1;
+        background-color: rgba(0, 100, 0, 0.3);
+    }
+    footer {
+        display: flex;
+        flex-basis: 5em;
+        background-color: rgba(0, 0, 100, 0.3);
+        
+        form {
+            display: flex;
+            flex-direction: row;
+            flex-grow: 1; 
+            align-items: stretch;
+            input[type="text"] {flex-grow: 1; }
+            input[type="submit"] { flex-basis: 10%; }
+        }
+    }
+}

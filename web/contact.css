@@ -823,3 +823,30 @@ table {
 
   .invisible-medium {
     display: block; } }
+.screen {
+  display: flex;
+  flex-direction: column;
+  height: 100%; }
+  .screen > * {
+    border: 1px solid white; }
+  .screen header {
+    flex-basis: 10em;
+    background-color: rgba(100, 0, 0, 0.3); }
+  .screen article {
+    flex-grow: 1;
+    background-color: rgba(0, 100, 0, 0.3); }
+  .screen footer {
+    display: flex;
+    flex-basis: 5em;
+    background-color: rgba(0, 0, 100, 0.3); }
+    .screen footer form {
+      display: flex;
+      flex-direction: row;
+      flex-grow: 1;
+      align-items: stretch; }
+      .screen footer form input[type="text"] {
+        flex-grow: 1; }
+      .screen footer form input[type="submit"] {
+        flex-basis: 10%; }
+
+/*# sourceMappingURL=contact.css.map */

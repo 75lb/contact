@@ -1,6 +1,6 @@
 "use strict";
-var TransportWeb = require("./lib/TransportWeb"),
-    ViewWeb = require("./lib/ViewWeb");
+var TransportWeb = require("../lib/TransportWeb"),
+    ViewWeb = require("../lib/ViewWeb");
 
 var transport = new TransportWeb(),
     options = { 

@@ -9,5 +9,8 @@
     "ws": "^0.4.31",
     "nature": "~0.3.1",
     "wardrobe": "~0.0.1"
+  },
+  "devDependencies": {
+    "gulp": "^3.5.5"
   }
 }
