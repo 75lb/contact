@@ -46,6 +46,7 @@ util.inherits(Session, EventEmitter);
 
 Session.prototype.disconnect = function(){
     this.view.showMessage("session disconnected");
+    this.view.removeListener("input", this._inputListener);
     this.emit("close");
 };
 Session.prototype.send = function(msg){
@@ -75,10 +76,11 @@ Session.prototype.incomingMsg = function(msg){
 Session.prototype.setView = function(view){
     var self = this;
     this.view = view;
-    view.on("input", function(line){
+    this._inputListener = function(line){
         self.send(line);
         self.view.showMessage(self.me + ": " + line, true);
-    });
+    };
+    view.on("input", this._inputListener);
 };
 
 },{"events":11,"util":15}],3:[function(require,module,exports){
@@ -129,10 +131,12 @@ var util = require("util"),
 module.exports = TransportWeb;
 
 function TransportWeb(){
+    var websocket;
+    
     this.connect = function(options, callback){
-        var url = util.format("ws://%s:%s", options.host, options.port || ""),
-            websocket = new WebSocket(url);
-
+        var url = util.format("ws://%s:%s", options.host, options.port || "");
+        
+        websocket = new WebSocket(url);
         console.log("Connecting to " + url);
 
         websocket.onopen = function(){
@@ -154,6 +158,11 @@ function TransportWeb(){
         websocket.onerror = function(err){
             console.error(err);
         };
+    };
+    this.close = function(){
+        if (websocket){
+            websocket.close();
+        }
     }
 }
 util.inherits(TransportWeb, Transport);
@@ -231,6 +240,7 @@ connectView.on("connect-as", function(username){
     loadingView.loading(true);
     transport.connect(options, function(session){
         loadingView.loading(false);
+        connectView.setConnected(true);
         chatView.enabled(true);
 
         session.setView(chatView);
@@ -242,6 +252,12 @@ connectView.on("connect-as", function(username){
         });
     });
 });
+
+connectView.on("disconnect", function(){
+    transport.close();
+    connectView.setConnected(false);
+});
+
 
 },{"../lib/TransportWebSocket":4,"./lib/ChatView":8,"./lib/ConnectView":9,"./lib/LoadingView":10}],8:[function(require,module,exports){
 "use strict";
@@ -291,22 +307,39 @@ var util = require("util"),
 
 module.exports = ConnectView;
 
-var $ = document.querySelector.bind(document),
-    form = $("#connectForm"),
-    username = $("#username");
+var $ = document.querySelector.bind(document);
 
 function ConnectView(){
-    var self = this;
+    var self = this,
+        form = $("#connectForm"),
+        connect = $("#connect"),
+        username = $("#username");
+
+    this.connected = null;
+    this.focus = username.focus.bind(username);
+    this.setConnected = function(connected){
+        this.connected = connected;
+        if (connected){
+            username.setAttribute("disabled", true);
+        } else {
+            username.removeAttribute("disabled");
+        }
+        connect.value = connected ? "Disconnect" : "Connect";
+    };
+    
     form.addEventListener("submit", function(e){
         e.preventDefault();
         var name = username.value;
-        if (name){
-            self.emit("connect-as", name);
+        if (self.connected){
+            self.emit("disconnect");
         } else {
-            self.focus();
+            if (name){
+                self.emit("connect-as", name);
+            } else {
+                self.focus();
+            }
         }
     });
-    this.focus = username.focus.bind(username);
 }
 util.inherits(ConnectView, EventEmitter);
 

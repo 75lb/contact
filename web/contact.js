@@ -16,6 +16,7 @@ connectView.on("connect-as", function(username){
     loadingView.loading(true);
     transport.connect(options, function(session){
         loadingView.loading(false);
+        connectView.setConnected(true);
         chatView.enabled(true);
 
         session.setView(chatView);
@@ -27,3 +28,9 @@ connectView.on("connect-as", function(username){
         });
     });
 });
+
+connectView.on("disconnect", function(){
+    transport.close();
+    connectView.setConnected(false);
+});
+

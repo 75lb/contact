@@ -4,21 +4,38 @@ var util = require("util"),
 
 module.exports = ConnectView;
 
-var $ = document.querySelector.bind(document),
-    form = $("#connectForm"),
-    username = $("#username");
+var $ = document.querySelector.bind(document);
 
 function ConnectView(){
-    var self = this;
+    var self = this,
+        form = $("#connectForm"),
+        connect = $("#connect"),
+        username = $("#username");
+
+    this.connected = null;
+    this.focus = username.focus.bind(username);
+    this.setConnected = function(connected){
+        this.connected = connected;
+        if (connected){
+            username.setAttribute("disabled", true);
+        } else {
+            username.removeAttribute("disabled");
+        }
+        connect.value = connected ? "Disconnect" : "Connect";
+    };
+    
     form.addEventListener("submit", function(e){
         e.preventDefault();
         var name = username.value;
-        if (name){
-            self.emit("connect-as", name);
+        if (self.connected){
+            self.emit("disconnect");
         } else {
-            self.focus();
+            if (name){
+                self.emit("connect-as", name);
+            } else {
+                self.focus();
+            }
         }
     });
-    this.focus = username.focus.bind(username);
 }
 util.inherits(ConnectView, EventEmitter);
