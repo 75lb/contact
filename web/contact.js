@@ -1,8 +1,8 @@
 "use strict";
-var TransportWeb = require("../lib/TransportWeb"),
-    ChatViewWeb = require("../lib/ChatViewWeb");
+var TransportWebSocket = require("../lib/TransportWebSocket"),
+    ChatViewWeb = require("./lib/ChatViewWeb");
 
-var transport = new TransportWeb(),
+var transport = new TransportWebSocket(),
     options = { 
         host: "serene-stream-2466.herokuapp.com"
     };

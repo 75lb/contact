@@ -1,12 +1,12 @@
 "use strict";
-var View = require("./View"),
+var View = require("../../lib/ChatView"),
     util = require("util");
 
-module.exports = ViewWeb;
+module.exports = ChatViewWeb;
 
 var $ = document.querySelector.bind(document);
 
-function ViewWeb(){
+function ChatViewWeb(){
     var message = $("#message"),
         log = $("#log"),
         self = this;
@@ -25,4 +25,4 @@ function ViewWeb(){
 
     message.focus();
 }
-util.inherits(ViewWeb, View);
+util.inherits(ChatViewWeb, View);

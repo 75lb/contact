@@ -2,13 +2,13 @@
 "use strict";
 var Thing = require("nature").Thing,
     ChatViewTerminal = require("./lib/ChatViewTerminal"),
-    TransportWeb = require("../lib/TransportWeb");
+    TransportWebSocket = require("../lib/TransportWebSocket");
 
 var argv = new Thing()
     .define({ name: "user", type: "string", alias: "u", value: "Lloyd" })
     .set(process.argv);    
 
-var transport = new TransportWeb();
+var transport = new TransportWebSocket();
 
 transport.connect({ host: "serene-stream-2466.herokuapp.com" }, function(session){
     session.setView(new ChatViewTerminal());
@@ -23,7 +23,7 @@ transport.connect({ host: "serene-stream-2466.herokuapp.com" }, function(session
 chat history, presence (arrived, left), /me, /who (is online), formatting, ssl, /info (about connection, connected users and their IPS), /ban, /kick, connection keep-alive, 
 web client host in query string, notifications
 
-var transportWeb = new TransportWeb();
+var transportWeb = new TransportWebSocket();
 transportWeb.connect({ host: "blah"}, function(session){
     session            // { type: "message", data: { user: "A", msg: "you there?" }}
         .pipe(history) // { type: "message", data: { user: "A", msg: "you there?" }}

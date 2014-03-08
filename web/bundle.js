@@ -3,6 +3,28 @@
 var EventEmitter = require("events").EventEmitter,
     util = require("util");
 
+module.exports = View;
+
+/**
+The main chat user interface (collection and display of messages)
+
+innerface:
+showMessage()
+event-> input(line)
+
+@constructor
+*/
+function View(){}
+View.prototype.showMessage = function(){
+    throw new Error("view.showMessage not overridden");
+}
+util.inherits(View, EventEmitter);
+
+},{"events":9,"util":13}],2:[function(require,module,exports){
+"use strict";
+var EventEmitter = require("events").EventEmitter,
+    util = require("util");
+
 module.exports = Session;
 
 /**
@@ -27,7 +49,6 @@ Session.prototype.disconnect = function(){
     this.emit("close");
 };
 Session.prototype.send = function(msg){
-    // console.log("session.send: " + msg)
     var evt = JSON.stringify({ type: "message", data: { user: this.me, msg: msg }});
     if (this.socket.write){
         this.socket.write(evt);
@@ -40,7 +61,7 @@ Session.prototype.incomingMsg = function(msg){
     if (evt.type === "message"){
         this.view.showMessage(evt.data.user + ": " + evt.data.msg);
     } else {
-        // console.dir(evt);
+        // ignore
     }
 };
 Session.prototype.setView = function(view){
@@ -52,7 +73,7 @@ Session.prototype.setView = function(view){
     });
 };
 
-},{"events":9,"util":13}],2:[function(require,module,exports){
+},{"events":9,"util":13}],3:[function(require,module,exports){
 "use strict";
 module.exports = Transport;
 
@@ -89,7 +110,7 @@ Transport.prototype.connect = function(options, callback){
     throw new Error("transport.listen() not implemented");
 };
 
-},{}],3:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 "use strict";
 var util = require("util"),
     Transport = require("./Transport"),
@@ -124,7 +145,7 @@ function TransportWeb(){
 }
 util.inherits(TransportWeb, Transport);
 
-},{"./Session":1,"./Transport":2,"./User":4,"util":13,"ws":7}],4:[function(require,module,exports){
+},{"./Session":2,"./Transport":3,"./User":5,"util":13,"ws":6}],5:[function(require,module,exports){
 "use strict";
 module.exports = User;
 
@@ -133,59 +154,7 @@ function User(ip, name){
     this.name = name;
 }
 
-},{}],5:[function(require,module,exports){
-"use strict";
-var EventEmitter = require("events").EventEmitter,
-    util = require("util");
-
-module.exports = View;
-
-/**
-The main chat user interface (collection and display of messages)
-
-innerface:
-showMessage()
-event-> input(line)
-
-@constructor
-*/
-function View(){}
-View.prototype.showMessage = function(){
-    throw new Error("view.showMessage not overridden");
-}
-util.inherits(View, EventEmitter);
-
-},{"events":9,"util":13}],6:[function(require,module,exports){
-"use strict";
-var View = require("./View"),
-    util = require("util");
-
-module.exports = ViewWeb;
-
-var $ = document.querySelector.bind(document);
-
-function ViewWeb(){
-    var message = $("#message"),
-        log = $("#log"),
-        self = this;
-
-    this.showMessage = function(msg){
-        var li = document.createElement("li");
-        li.textContent = msg;
-        log.appendChild(li);        
-    };
-    
-    $("#inputForm").addEventListener("submit", function(e){
-        e.preventDefault();
-        self.emit("input", message.value);
-        message.value = "";
-    });
-
-    message.focus();
-}
-util.inherits(ViewWeb, View);
-
-},{"./View":5,"util":13}],7:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 
 /**
  * Module dependencies.
@@ -230,23 +199,53 @@ function ws(uri, protocols, opts) {
 
 if (WebSocket) ws.prototype = WebSocket.prototype;
 
-},{}],8:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 "use strict";
-var TransportWeb = require("../lib/TransportWeb"),
-    ViewWeb = require("../lib/ViewWeb");
+var TransportWebSocket = require("../lib/TransportWebSocket"),
+    ChatViewWeb = require("./lib/ChatViewWeb");
 
-var transport = new TransportWeb(),
+var transport = new TransportWebSocket(),
     options = { 
         host: "serene-stream-2466.herokuapp.com"
     };
 
 transport.connect(options, function(session){
     console.log("BOOM");
-    session.setView(new ViewWeb());
+    session.setView(new ChatViewWeb());
     session.me = "Dave";
 });
 
-},{"../lib/TransportWeb":3,"../lib/ViewWeb":6}],9:[function(require,module,exports){
+},{"../lib/TransportWebSocket":4,"./lib/ChatViewWeb":8}],8:[function(require,module,exports){
+"use strict";
+var View = require("../../lib/ChatView"),
+    util = require("util");
+
+module.exports = ChatViewWeb;
+
+var $ = document.querySelector.bind(document);
+
+function ChatViewWeb(){
+    var message = $("#message"),
+        log = $("#log"),
+        self = this;
+
+    this.showMessage = function(msg){
+        var li = document.createElement("li");
+        li.textContent = msg;
+        log.appendChild(li);        
+    };
+    
+    $("#inputForm").addEventListener("submit", function(e){
+        e.preventDefault();
+        self.emit("input", message.value);
+        message.value = "";
+    });
+
+    message.focus();
+}
+util.inherits(ChatViewWeb, View);
+
+},{"../../lib/ChatView":1,"util":13}],9:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -1225,4 +1224,4 @@ function hasOwnProperty(obj, prop) {
 }
 
 }).call(this,require("/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js"),typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./support/isBuffer":12,"/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js":11,"inherits":10}]},{},[8])
+},{"./support/isBuffer":12,"/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js":11,"inherits":10}]},{},[7])
