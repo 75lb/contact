@@ -823,30 +823,42 @@ table {
 
   .invisible-medium {
     display: block; } }
-.screen {
+body {
+  display: -webkit-flex;
   display: flex;
+  -webkit-flex-direction: column;
   flex-direction: column;
   height: 100%; }
-  .screen > * {
+  body > * {
     border: 1px solid white; }
-  .screen header {
+  body header {
+    -webkit-flex-basis: 10em;
     flex-basis: 10em;
     background-color: rgba(100, 0, 0, 0.3); }
-  .screen article {
+  body article {
+    -webkit-flex-grow: 1;
     flex-grow: 1;
     background-color: rgba(0, 100, 0, 0.3); }
-  .screen footer {
+  body footer {
+    display: -webkit-flex;
     display: flex;
+    -webkit-flex-basis: 5em;
     flex-basis: 5em;
     background-color: rgba(0, 0, 100, 0.3); }
-    .screen footer form {
+    body footer form {
+      display: -webkit-flex;
       display: flex;
+      -webkit-flex-direction: row;
       flex-direction: row;
+      -webkit-flex-grow: 1;
       flex-grow: 1;
+      -webkit-align-items: stretch;
       align-items: stretch; }
-      .screen footer form input[type="text"] {
+      body footer form input[type="text"] {
+        -webkit-flex-grow: 1;
         flex-grow: 1; }
-      .screen footer form input[type="submit"] {
+      body footer form input[type="submit"] {
+        -webkit-flex-basis: 10%;
         flex-basis: 10%; }
 
 /*# sourceMappingURL=contact.css.map */

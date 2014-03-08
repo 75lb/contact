@@ -13,6 +13,10 @@ var transport = new TransportWeb();
 transport.connect({ host: "serene-stream-2466.herokuapp.com" }, function(session){
     session.setView(new ViewTerminal());
     session.me = argv.user;
+    session.on("close", function(){
+        console.log();
+        process.exit(0);
+    });
 });
 
 /*

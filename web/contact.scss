@@ -1,31 +1,47 @@
 @import "variables", "normalise", "list", "containers", "grid", "util", "responsive";
 
-.screen {
+body {
+    display: -webkit-flex;
     display: flex;
+    -webkit-flex-direction: column;
     flex-direction: column;
     height: 100%;
 
     & > * { border: 1px solid white; }
     header {
+        -webkit-flex-basis: 10em;
         flex-basis: 10em;
         background-color: rgba(100, 0, 0, 0.3);
     }
     article {
+        -webkit-flex-grow: 1;
         flex-grow: 1;
         background-color: rgba(0, 100, 0, 0.3);
     }
     footer {
+        display: -webkit-flex;
         display: flex;
+        -webkit-flex-basis: 5em;
         flex-basis: 5em;
         background-color: rgba(0, 0, 100, 0.3);
         
         form {
+            display: -webkit-flex;
             display: flex;
+            -webkit-flex-direction: row;
             flex-direction: row;
+            -webkit-flex-grow: 1; 
             flex-grow: 1; 
+            -webkit-align-items: stretch;
             align-items: stretch;
-            input[type="text"] {flex-grow: 1; }
-            input[type="submit"] { flex-basis: 10%; }
+            input[type="text"] {
+                -webkit-flex-grow: 1; 
+                flex-grow: 1; 
+            }
+            input[type="submit"] { 
+                -webkit-flex-basis: 10%; 
+                flex-basis: 10%; 
+            }
         }
     }
 }
