@@ -31,6 +31,7 @@ body {
         aside { 
             -webkit-flex-basis: $rightColWidth;
             flex-basis: $rightColWidth;
+            #username { width: 7em; font-size: 1.2em; }
         }
     }
     article {
