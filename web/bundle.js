@@ -134,7 +134,8 @@ function TransportWeb(){
     var websocket;
     
     this.connect = function(options, callback){
-        var url = util.format("ws://%s:%s", options.host, options.port || "");
+        var url = util.format("ws://%s:%s", options.host, options.port || ""),
+            pingInterval;
         
         websocket = new WebSocket(url);
         console.log("Connecting to " + url);
@@ -150,9 +151,12 @@ function TransportWeb(){
             };
             callback(session);
             
-            setInterval(function(){
-                session.sendRaw({ type: "ping" });
-                // console.log("ping");
+            pingInterval = setInterval(function(){
+                if (websocket.readyState === WebSocket.OPEN){
+                    session.sendRaw({ type: "ping" });
+                } else {
+                    clearInterval(pingInterval);
+                }
             }, 1000 * 30);
         }
         websocket.onerror = function(err){
