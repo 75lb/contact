@@ -24,6 +24,7 @@ util.inherits(Session, EventEmitter);
 
 Session.prototype.disconnect = function(){
     this.view.showMessage("session disconnected");
+    this.emit("close");
 };
 Session.prototype.send = function(msg){
     // console.log("session.send: " + msg)
@@ -95,16 +96,16 @@ var util = require("util"),
     Session = require("./Session"),
     User = require("./User"),
     WebSocket = typeof WebSocket === "undefined" ?  require("ws") : WebSocket;
-    
+
 module.exports = TransportWeb;
 
 function TransportWeb(){
     this.connect = function(options, callback){
         var url = util.format("ws://%s:%s", options.host, options.port || ""),
             websocket = new WebSocket(url);
-        
+
         console.log("Connecting to " + url);
-        
+
         websocket.onopen = function(){
             var session = new Session(
                 new User(url),
@@ -176,7 +177,6 @@ function ViewWeb(){
     
     $("#inputForm").addEventListener("submit", function(e){
         e.preventDefault();
-        // self.showMessage(message.value);
         self.emit("input", message.value);
         message.value = "";
     });
@@ -1224,5 +1224,5 @@ function hasOwnProperty(obj, prop) {
   return Object.prototype.hasOwnProperty.call(obj, prop);
 }
 
-}).call(this,require("/usr/local/lib/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js"),typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./support/isBuffer":12,"/usr/local/lib/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js":11,"inherits":10}]},{},[8])
+}).call(this,require("/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js"),typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"./support/isBuffer":12,"/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js":11,"inherits":10}]},{},[8])

@@ -19,7 +19,6 @@ function ViewWeb(){
     
     $("#inputForm").addEventListener("submit", function(e){
         e.preventDefault();
-        // self.showMessage(message.value);
         self.emit("input", message.value);
         message.value = "";
     });

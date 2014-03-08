@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 "use strict";
 var Thing = require("nature").Thing,
-    ViewTerminal = require("./lib/ViewTerminal"),
-    TransportWeb = require("./lib/TransportWeb");
+    ChatViewTerminal = require("./lib/ChatViewTerminal"),
+    TransportWeb = require("../lib/TransportWeb");
 
 var argv = new Thing()
     .define({ name: "user", type: "string", alias: "u", value: "Lloyd" })
@@ -11,7 +11,7 @@ var argv = new Thing()
 var transport = new TransportWeb();
 
 transport.connect({ host: "serene-stream-2466.herokuapp.com" }, function(session){
-    session.setView(new ViewTerminal());
+    session.setView(new ChatViewTerminal());
     session.me = argv.user;
     session.on("close", function(){
         console.log();

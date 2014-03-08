@@ -2,7 +2,7 @@
   "name": "contact",
   "version": "0.1.0",
   "description": "private, one-to-one or many-to-many command line chat",
-  "bin": "contact.js",
+  "bin": "terminal/contact.js",
   "repository": "https://github.com/75lb/contact",
   "author": "Lloyd Brookes",
   "dependencies": {

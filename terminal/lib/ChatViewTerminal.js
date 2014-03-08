@@ -1,12 +1,12 @@
 "use strict";
 var readline = require("readline"),
     util = require("util"),
-    View = require("./View"),
+    ChatView = require("../../lib/ChatView"),
     rl = readline.createInterface({ input: process.stdin, output: process.stdout });
 
-module.exports = ViewTerminal;
+module.exports = ChatViewTerminal;
 
-function ViewTerminal(){
+function ChatViewTerminal(){
     var self = this;
     rl.on("line", function(line){
         self.emit("input", line);
@@ -28,4 +28,4 @@ function ViewTerminal(){
     };
     rl.prompt();
 }
-util.inherits(ViewTerminal, View);
+util.inherits(ChatViewTerminal, ChatView);

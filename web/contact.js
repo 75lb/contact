@@ -1,6 +1,6 @@
 "use strict";
 var TransportWeb = require("../lib/TransportWeb"),
-    ViewWeb = require("../lib/ViewWeb");
+    ChatViewWeb = require("../lib/ChatViewWeb");
 
 var transport = new TransportWeb(),
     options = { 
@@ -9,6 +9,6 @@ var transport = new TransportWeb(),
 
 transport.connect(options, function(session){
     console.log("BOOM");
-    session.setView(new ViewWeb());
+    session.setView(new ChatViewWeb());
     session.me = "Dave";
 });
