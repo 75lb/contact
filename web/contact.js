@@ -1,20 +1,29 @@
 "use strict";
 var TransportWebSocket = require("../lib/TransportWebSocket"),
     ChatView = require("./lib/ChatView"),
-    ConnectView = require("./lib/ConnectView");
+    ConnectView = require("./lib/ConnectView"),
+    LoadingView = require("./lib/LoadingView");
 
 var transport = new TransportWebSocket(),
     options = {  host: "serene-stream-2466.herokuapp.com" },
     connectView = new ConnectView(),
-    chatView = new ChatView();
+    chatView = new ChatView(),
+    loadingView = new LoadingView();
 
 connectView.focus();
 
-connectView.on("connect", function(username){
+connectView.on("connect-as", function(username){
+    loadingView.loading(true);
     transport.connect(options, function(session){
-        console.log("BOOM");
+        loadingView.loading(false);
+        chatView.enabled(true);
+
         session.setView(chatView);
         session.me = username;
         chatView.focus();
+        
+        session.on("close", function(){
+            chatView.enabled(false);
+        });
     });
 });

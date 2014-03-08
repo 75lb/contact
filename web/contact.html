@@ -8,8 +8,11 @@
   <header>
     <h1>contact</h1>
     <aside>
-      <input id="username" type="text" placeHolder="User name">
-      <button id="connect">Connect</button>
+      <form id="connectForm">
+        <input id="username" type="text" placeHolder="User name">
+        <input id="connect" type="submit" value="Connect">
+        <p id="loading" style="display:none">Loading...</p>
+      </form>
     </aside>
   </header>
   
@@ -19,8 +22,8 @@
   
   <footer class="grid">
     <form id="inputForm">
-      <input type="text" id="message" placeholder="type your message">
-      <input type="submit" value="send">
+      <input id="message" type="text" placeholder="type your message" disabled>
+      <input id="send" type="submit" value="send" disabled>
     </form>
   </footer>
   <script src="bundle.js"></script>

@@ -1,20 +1,20 @@
 "use strict";
-var View = require("../../lib/ChatView"),
-    util = require("util"),
+var util = require("util"),
     EventEmitter = require("events").EventEmitter;
 
 module.exports = ConnectView;
 
 var $ = document.querySelector.bind(document),
-    connect = $("#connect"),
+    form = $("#connectForm"),
     username = $("#username");
 
 function ConnectView(){
     var self = this;
-    connect.addEventListener("click", function(){
+    form.addEventListener("submit", function(e){
+        e.preventDefault();
         var name = username.value;
         if (name){
-            self.emit("connect", name);
+            self.emit("connect-as", name);
         } else {
             self.focus();
         }

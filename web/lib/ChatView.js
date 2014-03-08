@@ -2,12 +2,14 @@
 var View = require("../../lib/ChatView"),
     util = require("util");
 
-module.exports = ChatViewWeb;
+module.exports = ChatView;
 
-var $ = document.querySelector.bind(document);
+var $ = document.querySelector.bind(document),
+    $$ = document.querySelectorAll.bind(document);
 
-function ChatViewWeb(){
+function ChatView(){
     var message = $("#message"),
+        send = $("#send"),
         log = $("#log"),
         self = this;
 
@@ -24,5 +26,14 @@ function ChatViewWeb(){
     });
 
     this.focus = message.focus.bind(message);
+    this.enabled = function(enabled){
+        if (enabled){
+            message.removeAttribute("disabled");
+            send.removeAttribute("disabled");
+        } else {
+            message.setAttribute("disabled", true);
+            send.setAttribute("disabled", true);
+        }
+    };
 }
-util.inherits(ChatViewWeb, View);
+util.inherits(ChatView, View);
