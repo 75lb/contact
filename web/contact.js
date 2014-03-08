@@ -1,14 +1,20 @@
 "use strict";
 var TransportWebSocket = require("../lib/TransportWebSocket"),
-    ChatViewWeb = require("./lib/ChatViewWeb");
+    ChatView = require("./lib/ChatView"),
+    ConnectView = require("./lib/ConnectView");
 
 var transport = new TransportWebSocket(),
-    options = { 
-        host: "serene-stream-2466.herokuapp.com"
-    };
+    options = {  host: "serene-stream-2466.herokuapp.com" },
+    connectView = new ConnectView(),
+    chatView = new ChatView();
 
-transport.connect(options, function(session){
-    console.log("BOOM");
-    session.setView(new ChatViewWeb());
-    session.me = "Dave";
+connectView.focus();
+
+connectView.on("connect", function(username){
+    transport.connect(options, function(session){
+        console.log("BOOM");
+        session.setView(chatView);
+        session.me = username;
+        chatView.focus();
+    });
 });

@@ -23,6 +23,6 @@ function ChatViewWeb(){
         message.value = "";
     });
 
-    message.focus();
+    this.focus = message.focus.bind(message);
 }
 util.inherits(ChatViewWeb, View);
