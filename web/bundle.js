@@ -56,6 +56,14 @@ Session.prototype.send = function(msg){
         this.socket.send(evt);
     }
 };
+Session.prototype.sendRaw = function(obj){
+    var evt = JSON.stringify(obj);
+    if (this.socket.write){
+        this.socket.write(evt);
+    } else {
+        this.socket.send(evt);
+    }
+};
 Session.prototype.incomingMsg = function(msg){
     var evt = JSON.parse(msg);
     if (evt.type === "message"){
@@ -137,6 +145,11 @@ function TransportWeb(){
                 session.incomingMsg(msg.data);
             };
             callback(session);
+            
+            setInterval(function(){
+                session.sendRaw({ type: "ping" });
+                // console.log("ping");
+            }, 1000 * 30);
         }
         websocket.onerror = function(err){
             console.error(err);
