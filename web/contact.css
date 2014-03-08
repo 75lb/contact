@@ -470,6 +470,10 @@ table {
     margin: 0 0 0 0.5em; }
 
 body {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  left: 0;
   display: -webkit-flex;
   display: flex;
   -webkit-flex-direction: column;
