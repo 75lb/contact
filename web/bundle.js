@@ -125,8 +125,11 @@ Transport.prototype.connect = function(options, callback){
 var util = require("util"),
     Transport = require("./Transport"),
     Session = require("./Session"),
-    User = require("./User"),
-    WebSocket = typeof WebSocket === "undefined" ?  require("ws") : WebSocket;
+    User = require("./User");
+    
+if (typeof WebSocket === "undefined"){
+    WebSocket =  require("ws");
+}
 
 module.exports = TransportWeb;
 
@@ -153,10 +156,8 @@ function TransportWeb(){
             
             pingInterval = setInterval(function(){
                 if (websocket.readyState === WebSocket.OPEN){
-                    console.log("PING")
                     session.sendRaw({ type: "ping" });
                 } else {
-                    console.log("PING CLEARED")
                     clearInterval(pingInterval);
                 }
             }, 1000 * 30);
