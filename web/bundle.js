@@ -135,7 +135,7 @@ function TransportWeb(){
     var websocket;
     
     this.connect = function(options, callback){
-        var url = util.format("ws://%s:%s", options.host, options.port || ""),
+        var url = util.format("ws://%s%s", options.host, options.port ? ":" + options.port : ""),
             pingInterval;
         
         websocket = new AvailableWebSocket(url);
@@ -292,6 +292,7 @@ function ChatView(){
         e.preventDefault();
         self.emit("input", message.value);
         message.value = "";
+        self.focus();
     });
 
     this.focus = message.focus.bind(message);

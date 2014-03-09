@@ -2,6 +2,7 @@
     "bitwise": true,
     "browser": true,
     "camelcase": true,
+    "es3": true,
     "eqeqeq": true,
     "globals": { "describe" : false, "it": false, "beforeEach": false },
     "globalstrict": false,

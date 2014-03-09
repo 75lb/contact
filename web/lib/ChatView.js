@@ -24,6 +24,7 @@ function ChatView(){
         e.preventDefault();
         self.emit("input", message.value);
         message.value = "";
+        self.focus();
     });
 
     this.focus = message.focus.bind(message);
