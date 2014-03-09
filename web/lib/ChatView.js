@@ -16,9 +16,10 @@ function ChatView(){
     this.showMessage = function(msg){
         var li = document.createElement("li");
         li.textContent = msg;
-        log.appendChild(li);        
+        log.appendChild(li);
+        li.scrollIntoView();
     };
-    
+
     $("#inputForm").addEventListener("submit", function(e){
         e.preventDefault();
         self.emit("input", message.value);

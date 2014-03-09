@@ -25,6 +25,7 @@ connectView.on("connect-as", function(username){
         
         session.on("close", function(){
             chatView.enabled(false);
+            connectView.setConnected(false);
         });
     });
 });

@@ -37,6 +37,11 @@ body {
     article {
         -webkit-flex-grow: 1;
         flex-grow: 1;
+        
+        display: -webkit-flex;
+        display: flex;
+
+        overflow: scroll;
         background-color: rgba(0, 100, 0, 0.3);
         font-size: 1.1em;
         line-height: 1.3;
@@ -49,14 +54,16 @@ body {
         background-color: rgba(0, 0, 100, 0.3);
 
         form {
+            -webkit-flex-grow: 1;
+            flex-grow: 1;
+
             display: -webkit-flex;
             display: flex;
             -webkit-flex-direction: row;
             flex-direction: row;
-            -webkit-flex-grow: 1;
-            flex-grow: 1;
             -webkit-align-items: stretch;
             align-items: stretch;
+            
             input[type="text"] {
                 -webkit-flex-grow: 1;
                 flex-grow: 1;

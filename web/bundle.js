@@ -153,8 +153,10 @@ function TransportWeb(){
             
             pingInterval = setInterval(function(){
                 if (websocket.readyState === WebSocket.OPEN){
+                    console.log("PING")
                     session.sendRaw({ type: "ping" });
                 } else {
+                    console.log("PING CLEARED")
                     clearInterval(pingInterval);
                 }
             }, 1000 * 30);
@@ -253,6 +255,7 @@ connectView.on("connect-as", function(username){
         
         session.on("close", function(){
             chatView.enabled(false);
+            connectView.setConnected(false);
         });
     });
 });
@@ -282,9 +285,10 @@ function ChatView(){
     this.showMessage = function(msg){
         var li = document.createElement("li");
         li.textContent = msg;
-        log.appendChild(li);        
+        log.appendChild(li);
+        li.scrollIntoView();
     };
-    
+
     $("#inputForm").addEventListener("submit", function(e){
         e.preventDefault();
         self.emit("input", message.value);
