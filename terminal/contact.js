@@ -37,6 +37,8 @@ transportWeb.connect({ host: "blah"}, function(session){
         .pipe(viewTerminal) // { type: "message", data: { user: "B", msg: "/me nods" }}
         .pipe(slashMe)      // { type: "action",  data: { user: "B", action: "nods"  }}
         .pipe(viewFile)     // { type: "action",  data: { user: "B", action: "nods"  }}
+        .pipe(notifyVisual) // { type: "action",  data: { user: "B", action: "nods"  }}
+        .pipe(notifyAudio)
         .session            // { type: "message", data: { user: "B", msg: "Yes i am" }}
 
 })

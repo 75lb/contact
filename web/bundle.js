@@ -3,7 +3,7 @@
 var EventEmitter = require("events").EventEmitter,
     util = require("util");
 
-module.exports = View;
+module.exports = ChatView;
 
 /**
 The main chat user interface (collection and display of messages)
@@ -14,13 +14,28 @@ event-> input(line)
 
 @constructor
 */
-function View(){}
-View.prototype.showMessage = function(){
-    throw new Error("view.showMessage not overridden");
+function ChatView(){}
+ChatView.prototype.showMessage = function(){
+    throw new Error("chatView.showMessage not overridden");
 }
-util.inherits(View, EventEmitter);
+util.inherits(ChatView, EventEmitter);
 
 },{"events":11,"util":15}],2:[function(require,module,exports){
+module.exports = Connection;
+
+function Connection(socket){
+    this._socket = socket;
+    this.createdDate = Date.now();
+}
+Connection.prototype.write = function(msg){
+    if (this._socket.write){
+        this._socket.write(msg);
+    } else {
+        this._socket.send(msg);
+    }    
+};
+
+},{}],3:[function(require,module,exports){
 "use strict";
 var EventEmitter = require("events").EventEmitter,
     util = require("util");
@@ -35,10 +50,9 @@ disconnected -> connected -> disconnected
 connected -> typing -> connected
 @constructor
 */
-function Session(speakingTo, socket){
+function Session(connection){
     this.state = "connected";
-    this.speakingTo = speakingTo;
-    this.socket = socket;
+    this.connection = connection;
     this.me = null;
     this.view = null;
 }
@@ -51,24 +65,15 @@ Session.prototype.disconnect = function(){
 };
 Session.prototype.send = function(msg){
     var evt = JSON.stringify({ type: "message", data: { user: this.me, msg: msg }});
-    if (this.socket.write){
-        this.socket.write(evt);
-    } else {
-        this.socket.send(evt);
-    }
+    this.connection.write(evt);
 };
 Session.prototype.sendRaw = function(obj){
     var evt = JSON.stringify(obj);
-    if (this.socket.write){
-        this.socket.write(evt);
-    } else {
-        this.socket.send(evt);
-    }
+    this.connection.write(evt);
 };
 Session.prototype.incomingMsg = function(msg){
-    var evt = JSON.parse(msg);
-    if (evt.type === "message"){
-        this.view.showMessage(evt.data.user + ": " + evt.data.msg);
+    if (msg.type === "message"){
+        this.view.showMessage(msg.data.user + ": " + msg.data.msg);
     } else {
         // ignore
     }
@@ -83,7 +88,7 @@ Session.prototype.setView = function(view){
     view.on("input", this._inputListener);
 };
 
-},{"events":11,"util":15}],3:[function(require,module,exports){
+},{"events":11,"util":15}],4:[function(require,module,exports){
 "use strict";
 module.exports = Transport;
 
@@ -120,38 +125,36 @@ Transport.prototype.connect = function(options, callback){
     throw new Error("transport.listen() not implemented");
 };
 
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 "use strict";
 var util = require("util"),
     Transport = require("./Transport"),
     Session = require("./Session"),
-    User = require("./User"),
+    Connection = require("./Connection"),
     WebSocketLib =  require("ws"),
     AvailableWebSocket = typeof WebSocket === "undefined" ? WebSocketLib : WebSocket;
-    
-module.exports = TransportWeb;
 
-function TransportWeb(){
+module.exports = TransportWebSocket;
+
+function TransportWebSocket(){
     var websocket;
-    
+
     this.connect = function(options, callback){
         var url = util.format("ws://%s%s", options.host, options.port ? ":" + options.port : ""),
             pingInterval;
-        
+
         websocket = new AvailableWebSocket(url);
         console.log("Connecting to " + url);
-
+        
         websocket.onopen = function(){
-            var session = new Session(
-                new User(url),
-                websocket
-            );
+            var session = new Session(new Connection(websocket));
+            
             websocket.onclose = session.disconnect.bind(session);
             websocket.onmessage = function(msg){
-                session.incomingMsg(msg.data);
+                session.incomingMsg(JSON.parse(msg.data));
             };
             callback(session);
-            
+
             pingInterval = setInterval(function(){
                 if (websocket.readyState === AvailableWebSocket.OPEN){
                     session.sendRaw({ type: "ping" });
@@ -170,18 +173,9 @@ function TransportWeb(){
         }
     }
 }
-util.inherits(TransportWeb, Transport);
+util.inherits(TransportWebSocket, Transport);
 
-},{"./Session":2,"./Transport":3,"./User":5,"util":15,"ws":6}],5:[function(require,module,exports){
-"use strict";
-module.exports = User;
-
-function User(ip, name){
-    this.ip = ip;
-    this.name = name;
-}
-
-},{}],6:[function(require,module,exports){
+},{"./Connection":2,"./Session":3,"./Transport":4,"util":15,"ws":6}],6:[function(require,module,exports){
 
 /**
  * Module dependencies.
@@ -265,7 +259,7 @@ connectView.on("disconnect", function(){
 });
 
 
-},{"../lib/TransportWebSocket":4,"./lib/ChatView":8,"./lib/ConnectView":9,"./lib/LoadingView":10}],8:[function(require,module,exports){
+},{"../lib/TransportWebSocket":5,"./lib/ChatView":8,"./lib/ConnectView":9,"./lib/LoadingView":10}],8:[function(require,module,exports){
 "use strict";
 var View = require("../../lib/ChatView"),
     util = require("util");
