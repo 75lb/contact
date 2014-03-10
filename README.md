@@ -8,5 +8,8 @@ Contact
 =======
 A simple, private chat system. 
 
-* Terminal and web clients
 * Chat one-to-one or many-to-many
+* You control the data, end to end
+* For many-to-many chat, host your own private [relay](https://github.com/75lb/contact-server) locally or for free on Heroku
+* Terminal and web clients
+* No data is snooped or stored

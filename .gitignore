@@ -2,3 +2,4 @@ node_modules
 out
 web/.bundle.js
 _gh-pages
+tmp

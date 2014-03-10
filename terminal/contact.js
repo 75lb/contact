@@ -2,7 +2,8 @@
 "use strict";
 var Thing = require("nature").Thing,
     ChatViewTerminal = require("./lib/ChatViewTerminal"),
-    TransportWebSocket = require("../lib/TransportWebSocket");
+    TransportWebSocket = require("../lib/TransportWebSocket"),
+    url = "serene-stream-2466.herokuapp.com";
 
 var argv = new Thing()
     .define({ name: "user", type: "string", alias: "u", value: "Lloyd" })
@@ -10,14 +11,20 @@ var argv = new Thing()
 
 var transport = new TransportWebSocket();
 
-transport.connect({ host: "serene-stream-2466.herokuapp.com" }, function(session){
-    session.setView(new ChatViewTerminal());
-    session.me = argv.user;
-    session.on("close", function(){
-        console.log();
-        process.exit(0);
-    });
+console.log("Connecting to", url);
+
+var session = transport.connect({ host: url });
+// session.setView(new ChatViewTerminal());
+session.me = argv.user;
+session.on("disconnected", function(){
+    console.log();
+    process.exit(0);
 });
+session.on("readable", function(){
+    var msg = this.read();
+    console.dir(msg);
+    this.write(msg);
+})
 
 /*
 chat history, presence (arrived, left), /me, /who (is online), formatting, ssl, /info (about connection, connected users and their IPS), /ban, /kick, connection keep-alive, 
