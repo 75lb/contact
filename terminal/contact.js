@@ -3,6 +3,7 @@
 var Thing = require("nature").Thing,
     ChatViewTerminal = require("./lib/ChatViewTerminal"),
     TransportWebSocket = require("../lib/TransportWebSocket"),
+    monitor = require("stream-monitor"),
     url = "serene-stream-2466.herokuapp.com";
 
 var argv = new Thing()
@@ -14,17 +15,13 @@ var transport = new TransportWebSocket();
 console.log("Connecting to", url);
 
 var session = transport.connect({ host: url });
-// session.setView(new ChatViewTerminal());
+monitor(session);
 session.me = argv.user;
 session.on("disconnected", function(){
     console.log();
     process.exit(0);
 });
-session.on("readable", function(){
-    var msg = this.read();
-    console.dir(msg);
-    this.write(msg);
-})
+session.pipe(new ChatViewTerminal({ session: session }));
 
 /*
 chat history, presence (arrived, left), /me, /who (is online), formatting, ssl, /info (about connection, connected users and their IPS), /ban, /kick, connection keep-alive, 
