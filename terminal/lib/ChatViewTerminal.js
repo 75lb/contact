@@ -15,13 +15,18 @@ function ChatViewTerminal(options){
     var self = this;
 
     rl.on("line", function(line){
-        self._writeLine(global.user + ": " + line, true);
-        self.push(new Message({ txt: line }));
+        if (global.session.connection.state === 1){
+            self._writeLine(global.user + ": " + line, true);
+            self.push(new Message({ txt: line }));
+        }
     });
     rl.on("close", function(){
         process.exit(0);
     });
-    rl.prompt();    
+    
+    global.session.on("connected", function(){
+        rl.prompt();    
+    });
 }
 util.inherits(ChatViewTerminal, Transform);
 
