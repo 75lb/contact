@@ -1,51 +1,78 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 "use strict";
 var EventEmitter = require("events").EventEmitter,
-    util = require("util");
+    util = require("util"),
+    Message = require("./Message"),
+    global = require("./global");
 
-module.exports = ChatView;
-
-/**
-The main chat user interface (collection and display of messages)
-
-innerface:
-showMessage()
-event-> input(line)
-
-@constructor
-*/
-function ChatView(){}
-ChatView.prototype.showMessage = function(){
-    throw new Error("chatView.showMessage not overridden");
-}
-util.inherits(ChatView, EventEmitter);
-
-},{"events":15,"util":27}],2:[function(require,module,exports){
 module.exports = Connection;
 
-function Connection(socket){
-    this._socket = socket;
+/**
+Adapter adding a unified interface to WebSocket and net.Socket
+@constructor
+*/
+function Connection(websocket){
+    var self = this;
+    this._socket = websocket;
     this.createdDate = Date.now();
+
+    websocket.onopen = function(){
+        self.emit("open");
+    };
+    websocket.onclose = function(){
+        self.emit("close");
+    };
+    websocket.onmessage = function(msg){
+        var data = JSON.parse(msg.data);
+        data.received = true;
+        self.emit("data", data);
+    };
+    websocket.onerror = function(err){
+        self.emit("error", err);
+    };
+
+    var keepAlive = setInterval(function(){
+        if (self._socket.readyState === 1){
+            self.write(new Message({ sys: "ping" }));
+        } else {
+            clearInterval(keepAlive);
+        }
+    }, 1000 * 30);
+    
+    Object.defineProperty(this, "state", { configurable: true, enumerable: true, get: function(){
+        return self._socket.readyState;
+    }});
 }
+util.inherits(Connection, EventEmitter);
 Connection.prototype.write = function(msg){
+    if (msg.received) return;
+    if (this._socket.readyState !== 1) return;
+    
+    msg = JSON.stringify(msg);
     if (this._socket.write){
         this._socket.write(msg);
     } else {
         this._socket.send(msg);
-    }    
+    }
+};
+Connection.prototype.close = function(){
+    this._socket.close();
 };
 
-},{}],3:[function(require,module,exports){
+},{"./Message":2,"./global":6,"events":15,"util":27}],2:[function(require,module,exports){
+var global = require("./global");
+
 module.exports = Message;
 
-function Message(user){
-    this.user = user;
-    this.msg = "<msg>";
-    this.system = null;
+function Message(options){
+    this.user = global.user;
+    this.txt = options.txt;
+    this.sys = options.sys;
+    this.action = options.action;
     this.date = Date.now();
 }
 
-},{}],4:[function(require,module,exports){
+},{"./global":6}],3:[function(require,module,exports){
 "use strict";
 var EventEmitter = require("events").EventEmitter,
     stream = require("stream"),
@@ -60,28 +87,35 @@ A chat session. Survives disconnects.
 @constructor
 */
 function Session(options){
+    options = options || {};
+    options.objectMode = true;
     Duplex.call(this, options);
-    this.connection = connection;
-    this.me = null;
-    this.view = null;
+
+    var self = this;
+    this.connection = options.connection;
+    
+    this.connection.on("data", function(data){
+        self.push(data);
+    });
+    this.connection.on("open", function(){
+        self.emit("connected");
+        self.push(new Message({ action: "connected" }));
+    });
+    this.connection.on("close", function(){
+        self.emit("disconnected");
+    });
 }
 util.inherits(Session, Duplex);
-Session.prototype._read = function(){
-    
-};
-Session.prototype._write = function(){
-    
+Session.prototype._read = function(){};
+Session.prototype._write = function(msg, enc, done){
+    this.connection.write(msg);
+    done();
 };
 Session.prototype.close = function(){
-    var msg = new Message(this.me);
-    msg.system = "session disconnected";
-    this.push(null);
+    this.push(new Message({ action: "disconnected" }));
+    this.connection.close();
 };
-Session.prototype.incomingMsg = function(msg){
-    this.push(msg);
-};
-
-},{"./Message":3,"events":15,"stream":19,"util":27}],5:[function(require,module,exports){
+},{"./Message":2,"events":15,"stream":19,"util":27}],4:[function(require,module,exports){
 "use strict";
 module.exports = Transport;
 
@@ -118,7 +152,7 @@ Transport.prototype.connect = function(options, callback){
     throw new Error("transport.listen() not implemented");
 };
 
-},{}],6:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 "use strict";
 var util = require("util"),
     Transport = require("./Transport"),
@@ -132,46 +166,25 @@ module.exports = TransportWebSocket;
 function TransportWebSocket(){
     var websocket;
 
-    this.connect = function(options, callback){
-        var url = util.format("ws://%s%s", options.host, options.port ? ":" + options.port : ""),
-            pingInterval;
+    this.connect = function(options){
+        var url = util.format("ws://%s%s", options.host, options.port ? ":" + options.port : "");
 
         websocket = new AvailableWebSocket(url);
-        console.log("Connecting to " + url);
-        
-        websocket.onopen = function(){
-            var session = new Session({
-                objectMode: true,
-                socket: new Connection(websocket)
-            });
-            
-            websocket.onclose = session.close.bind(session);
-            websocket.onmessage = function(msg){
-                session.incomingMsg(JSON.parse(msg.data));
-            };
-            callback(session);
 
-            pingInterval = setInterval(function(){
-                if (websocket.readyState === AvailableWebSocket.OPEN){
-                    session.sendRaw({ type: "ping" });
-                } else {
-                    clearInterval(pingInterval);
-                }
-            }, 1000 * 30);
-        }
-        websocket.onerror = function(err){
-            console.error(err);
-        };
+        return new Session({ connection: new Connection(websocket) });
     };
+    
     this.close = function(){
-        if (websocket){
-            websocket.close();
-        }
+        websocket.close();
     }
 }
 util.inherits(TransportWebSocket, Transport);
 
-},{"./Connection":2,"./Session":4,"./Transport":5,"util":27,"ws":7}],7:[function(require,module,exports){
+},{"./Connection":1,"./Session":3,"./Transport":4,"util":27,"ws":7}],6:[function(require,module,exports){
+exports.session = null;
+exports.user = null;
+
+},{}],7:[function(require,module,exports){
 
 /**
  * Module dependencies.
@@ -221,66 +234,72 @@ if (WebSocket) ws.prototype = WebSocket.prototype;
 var TransportWebSocket = require("../lib/TransportWebSocket"),
     ChatView = require("./lib/ChatView"),
     ConnectView = require("./lib/ConnectView"),
-    LoadingView = require("./lib/LoadingView");
+    LoadingView = require("./lib/LoadingView"),
+    global = require("../lib/global");
 
 var transport = new TransportWebSocket(),
     options = {  host: "serene-stream-2466.herokuapp.com" },
-    connectView = new ConnectView(),
-    chatView = new ChatView(),
-    loadingView = new LoadingView();
+    view = {
+        connect: new ConnectView(),
+        chat: new ChatView(),
+        loading: new LoadingView()
+    };
 
-connectView.focus();
+view.connect.focus();
 
-connectView.on("connect-as", function(username){
-    loadingView.loading(true);
-    transport.connect(options, function(session){
-        loadingView.loading(false);
-        connectView.setConnected(true);
-        chatView.enabled(true);
+view.connect.on("connect-as", function(username){
+    view.loading.loading(true);
 
-        session.setView(chatView);
-        session.me = username;
-        chatView.focus();
-        
-        session.on("close", function(){
-            chatView.enabled(false);
-            connectView.setConnected(false);
-        });
+    var session = transport.connect(options);
+    session.on("connected", function(){
+        global.user = username;
+        global.session = session;
+
+        view.loading.loading(false);
+        view.connect.setConnected(true);
+        view.chat.enabled(true);
+
+        // session.setView(view.chat);
+        session.pipe(view.chat).pipe(session);
+        view.chat.focus();
+    });
+
+    session.on("disconnected", function(){
+        view.chat.enabled(false);
+        view.connect.setConnected(false);
     });
 });
 
-connectView.on("disconnect", function(){
+view.connect.on("disconnect", function(){
     transport.close();
-    connectView.setConnected(false);
+    view.connect.setConnected(false);
 });
 
-
-},{"../lib/TransportWebSocket":6,"./lib/ChatView":9,"./lib/ConnectView":10,"./lib/LoadingView":11}],9:[function(require,module,exports){
+},{"../lib/TransportWebSocket":5,"../lib/global":6,"./lib/ChatView":9,"./lib/ConnectView":10,"./lib/LoadingView":11}],9:[function(require,module,exports){
 "use strict";
-var View = require("../../lib/ChatView"),
-    util = require("util");
+var util = require("util"),
+    Transform = require("stream").Transform,
+    Message = require("../../lib/Message"),
+    global = require("../../lib/global");
 
 module.exports = ChatView;
 
 var $ = document.querySelector.bind(document),
     $$ = document.querySelectorAll.bind(document);
 
-function ChatView(){
+function ChatView(options){
+    options = options || {};
+    options.objectMode = true;
+    Transform.call(this, options);
+    
     var message = $("#message"),
         send = $("#send"),
-        log = $("#log"),
         self = this;
-
-    this.showMessage = function(msg){
-        var li = document.createElement("li");
-        li.textContent = msg;
-        log.appendChild(li);
-        li.scrollIntoView();
-    };
 
     $("#inputForm").addEventListener("submit", function(e){
         e.preventDefault();
-        self.emit("input", message.value);
+        self._writeLine(global.user + ": " + message.value);
+        self.push(new Message({ txt: message.value }))
         message.value = "";
         self.focus();
     });
@@ -296,9 +315,29 @@ function ChatView(){
         }
     };
 }
-util.inherits(ChatView, View);
+util.inherits(ChatView, Transform);
 
-},{"../../lib/ChatView":1,"util":27}],10:[function(require,module,exports){
+ChatView.prototype._writeLine = function(msg){
+    var log = $("#log"),
+        li = document.createElement("li");
+    li.textContent = msg;
+    log.appendChild(li);
+    li.scrollIntoView();
+};
+
+ChatView.prototype._transform = function(msg, enc, done){
+    if (msg.txt){
+        this._writeLine(msg.user + ": " + msg.txt);
+    } else if (msg.action){
+        this._writeLine(msg.user + " " + msg.action);
+    } else {
+        // this._writeLine(JSON.stringify(msg));
+    }
+    this.push(msg);
+    done();
+};
+
+},{"../../lib/Message":2,"../../lib/global":6,"stream":19,"util":27}],10:[function(require,module,exports){
 "use strict";
 var util = require("util"),
     EventEmitter = require("events").EventEmitter;

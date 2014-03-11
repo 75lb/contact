@@ -6,9 +6,9 @@ var readline = require("readline"),
     Transform = require("stream").Transform,
     rl = readline.createInterface({ input: process.stdin, output: process.stdout });
 
-module.exports = ChatViewTerminal;
+module.exports = ChatView;
 
-function ChatViewTerminal(options){
+function ChatView(options){
     options = options || {};
     options.objectMode = true;
     Transform.call(this, options)
@@ -20,17 +20,18 @@ function ChatViewTerminal(options){
             self.push(new Message({ txt: line }));
         }
     });
-    rl.on("close", function(){
-        process.exit(0);
-    });
+    // rl.on("close", function(){
+    //     process.exit(0);
+    // });
+    
     
     global.session.on("connected", function(){
         rl.prompt();    
     });
 }
-util.inherits(ChatViewTerminal, Transform);
+util.inherits(ChatView, Transform);
 
-ChatViewTerminal.prototype._writeLine = function(line, prevLine){
+ChatView.prototype._writeLine = function(line, prevLine){
     rl.pause();
     if (prevLine){
         readline.moveCursor(process.stdout, 0, -1);
@@ -42,7 +43,7 @@ ChatViewTerminal.prototype._writeLine = function(line, prevLine){
     rl.resume();
 };
 
-ChatViewTerminal.prototype._transform = function(msg, enc, done){
+ChatView.prototype._transform = function(msg, enc, done){
     if (msg.txt){
         this._writeLine(msg.user + ": " + msg.txt);
     } else if (msg.action){

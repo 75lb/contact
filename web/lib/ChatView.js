@@ -1,28 +1,27 @@
 "use strict";
-var View = require("../../lib/ChatView"),
-    util = require("util");
+var util = require("util"),
+    Transform = require("stream").Transform,
+    Message = require("../../lib/Message"),
+    global = require("../../lib/global");
 
 module.exports = ChatView;
 
 var $ = document.querySelector.bind(document),
     $$ = document.querySelectorAll.bind(document);
 
-function ChatView(){
+function ChatView(options){
+    options = options || {};
+    options.objectMode = true;
+    Transform.call(this, options);
+    
     var message = $("#message"),
         send = $("#send"),
-        log = $("#log"),
         self = this;
-
-    this.showMessage = function(msg){
-        var li = document.createElement("li");
-        li.textContent = msg;
-        log.appendChild(li);
-        li.scrollIntoView();
-    };
 
     $("#inputForm").addEventListener("submit", function(e){
         e.preventDefault();
-        self.emit("input", message.value);
+        self._writeLine(global.user + ": " + message.value);
+        self.push(new Message({ txt: message.value }))
         message.value = "";
         self.focus();
     });
@@ -38,4 +37,24 @@ function ChatView(){
         }
     };
 }
-util.inherits(ChatView, View);
+util.inherits(ChatView, Transform);
+
+ChatView.prototype._writeLine = function(msg){
+    var log = $("#log"),
+        li = document.createElement("li");
+    li.textContent = msg;
+    log.appendChild(li);
+    li.scrollIntoView();
+};
+
+ChatView.prototype._transform = function(msg, enc, done){
+    if (msg.txt){
+        this._writeLine(msg.user + ": " + msg.txt);
+    } else if (msg.action){
+        this._writeLine(msg.user + " " + msg.action);
+    } else {
+        // this._writeLine(JSON.stringify(msg));
+    }
+    this.push(msg);
+    done();
+};

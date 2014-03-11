@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 "use strict";
 var Thing = require("nature").Thing,
-    ChatViewTerminal = require("./lib/ChatViewTerminal"),
+    ChatView = require("./lib/ChatView"),
     TransportWebSocket = require("../lib/TransportWebSocket"),
     global = require("../lib/global"),
     monitor = require("stream-monitor"),
@@ -20,13 +20,17 @@ var session = transport.connect({ host: url });
 global.user = argv.user;
 global.session = session;
 
+process.on("SIGINT", function(){
+    session.close();
+});
 session.on("disconnected", function(){
     console.log();
     process.exit(0);
 });
-session.pipe(new ChatViewTerminal())
-    .pipe(session);
 
+session.pipe(new ChatView())
+    .pipe(session);
+    
 /*
 chat history, presence (arrived, left), /me, /who (is online), formatting, ssl, /info (about connection, connected users and their IPS), /ban, /kick, connection keep-alive, 
 web client host in query string, notifications

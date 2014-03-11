@@ -2,36 +2,43 @@
 var TransportWebSocket = require("../lib/TransportWebSocket"),
     ChatView = require("./lib/ChatView"),
     ConnectView = require("./lib/ConnectView"),
-    LoadingView = require("./lib/LoadingView");
+    LoadingView = require("./lib/LoadingView"),
+    global = require("../lib/global");
 
 var transport = new TransportWebSocket(),
     options = {  host: "serene-stream-2466.herokuapp.com" },
-    connectView = new ConnectView(),
-    chatView = new ChatView(),
-    loadingView = new LoadingView();
+    view = {
+        connect: new ConnectView(),
+        chat: new ChatView(),
+        loading: new LoadingView()
+    };
 
-connectView.focus();
+view.connect.focus();
 
-connectView.on("connect-as", function(username){
-    loadingView.loading(true);
-    transport.connect(options, function(session){
-        loadingView.loading(false);
-        connectView.setConnected(true);
-        chatView.enabled(true);
+view.connect.on("connect-as", function(username){
+    view.loading.loading(true);
 
-        session.setView(chatView);
-        session.me = username;
-        chatView.focus();
-        
-        session.on("close", function(){
-            chatView.enabled(false);
-            connectView.setConnected(false);
-        });
+    var session = transport.connect(options);
+    session.on("connected", function(){
+        global.user = username;
+        global.session = session;
+
+        view.loading.loading(false);
+        view.connect.setConnected(true);
+        view.chat.enabled(true);
+
+        // session.setView(view.chat);
+        session.pipe(view.chat).pipe(session);
+        view.chat.focus();
+    });
+
+    session.on("disconnected", function(){
+        view.chat.enabled(false);
+        view.connect.setConnected(false);
     });
 });
 
-connectView.on("disconnect", function(){
+view.connect.on("disconnect", function(){
     transport.close();
-    connectView.setConnected(false);
+    view.connect.setConnected(false);
 });
-
