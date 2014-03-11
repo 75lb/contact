@@ -20,10 +20,6 @@ function ChatView(options){
             self.push(new Message({ txt: line }));
         }
     });
-    // rl.on("close", function(){
-    //     process.exit(0);
-    // });
-    
     
     global.session.on("connected", function(){
         rl.prompt();    

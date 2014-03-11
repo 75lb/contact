@@ -27,7 +27,6 @@ view.connect.on("connect-as", function(username){
         view.connect.setConnected(true);
         view.chat.enabled(true);
 
-        // session.setView(view.chat);
         session.pipe(view.chat).pipe(session);
         view.chat.focus();
     });
@@ -36,9 +35,8 @@ view.connect.on("connect-as", function(username){
         view.chat.enabled(false);
         view.connect.setConnected(false);
     });
-});
 
-view.connect.on("disconnect", function(){
-    transport.close();
-    view.connect.setConnected(false);
+    view.connect.on("disconnect", function(){
+        session.close();
+    });
 });

@@ -47,7 +47,6 @@ util.inherits(Connection, EventEmitter);
 Connection.prototype.write = function(msg){
     if (msg.received) return;
     if (this._socket.readyState !== 1) return;
-    
     msg = JSON.stringify(msg);
     if (this._socket.write){
         this._socket.write(msg);
@@ -115,6 +114,7 @@ Session.prototype.close = function(){
     this.push(new Message({ action: "disconnected" }));
     this.connection.close();
 };
+
 },{"./Message":2,"events":15,"stream":19,"util":27}],4:[function(require,module,exports){
 "use strict";
 module.exports = Transport;
@@ -259,7 +259,6 @@ view.connect.on("connect-as", function(username){
         view.connect.setConnected(true);
         view.chat.enabled(true);
 
-        // session.setView(view.chat);
         session.pipe(view.chat).pipe(session);
         view.chat.focus();
     });
@@ -268,11 +267,10 @@ view.connect.on("connect-as", function(username){
         view.chat.enabled(false);
         view.connect.setConnected(false);
     });
-});
 
-view.connect.on("disconnect", function(){
-    transport.close();
-    view.connect.setConnected(false);
+    view.connect.on("disconnect", function(){
+        session.close();
+    });
 });
 
 },{"../lib/TransportWebSocket":5,"../lib/global":6,"./lib/ChatView":9,"./lib/ConnectView":10,"./lib/LoadingView":11}],9:[function(require,module,exports){
