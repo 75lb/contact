@@ -3,33 +3,27 @@
 var Thing = require("nature").Thing,
     ChatView = require("./lib/ChatView"),
     TransportWebSocket = require("../lib/TransportWebSocket"),
-    contact = require("../lib/contact"),
-    monitor = require("stream-monitor"),
-    url = "serene-stream-2466.herokuapp.com";
+    contact = require("../lib/contact");
 
 var argv = new Thing()
     .define({ name: "user", type: "string", alias: "u", value: "Lloyd" })
+    .define({ name: "server", type: "string", alias: "s", value: "serene-stream-2466.herokuapp.com" })
     .set(process.argv);    
 
 var transport = new TransportWebSocket();
 
-console.log("Connecting to", url);
+console.log("Connecting to", argv.server);
 
-var session = transport.connect({ host: url });
-// monitor(session);
+var session = transport.connect({ host: argv.server });
 contact.user = argv.user;
 contact.session = session;
 
-process.on("exit", function(){
-    console.log("process exiting")
-    // session.close();
-});
 session.on("disconnected", function(){
     console.log();
     process.exit(0);
 });
 
-session.pipe(new ChatView())
+session.pipe(ChatView())
     .pipe(session);
     
 /*

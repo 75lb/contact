@@ -2,8 +2,7 @@
 "use strict";
 var EventEmitter = require("events").EventEmitter,
     util = require("util"),
-    Message = require("./Message"),
-    global = require("./global");
+    Message = require("./Message");
 
 module.exports = Connection;
 
@@ -58,20 +57,20 @@ Connection.prototype.close = function(){
     this._socket.close();
 };
 
-},{"./Message":2,"./global":6,"events":15,"util":27}],2:[function(require,module,exports){
-var global = require("./global");
+},{"./Message":2,"events":15,"util":27}],2:[function(require,module,exports){
+var contact = require("./contact");
 
 module.exports = Message;
 
 function Message(options){
-    this.user = global.user;
+    this.user = contact.user;
     this.txt = options.txt;
     this.sys = options.sys;
     this.action = options.action;
     this.date = Date.now();
 }
 
-},{"./global":6}],3:[function(require,module,exports){
+},{"./contact":6}],3:[function(require,module,exports){
 "use strict";
 var EventEmitter = require("events").EventEmitter,
     stream = require("stream"),
@@ -235,7 +234,7 @@ var TransportWebSocket = require("../lib/TransportWebSocket"),
     ChatView = require("./lib/ChatView"),
     ConnectView = require("./lib/ConnectView"),
     LoadingView = require("./lib/LoadingView"),
-    global = require("../lib/global");
+    contact = require("../lib/contact");
 
 var transport = new TransportWebSocket(),
     options = {  host: "serene-stream-2466.herokuapp.com" },
@@ -252,8 +251,8 @@ view.connect.on("connect-as", function(username){
 
     var session = transport.connect(options);
     session.on("connected", function(){
-        global.user = username;
-        global.session = session;
+        contact.user = username;
+        contact.session = session;
 
         view.loading.loading(false);
         view.connect.setConnected(true);
@@ -273,12 +272,12 @@ view.connect.on("connect-as", function(username){
     });
 });
 
-},{"../lib/TransportWebSocket":5,"../lib/global":6,"./lib/ChatView":9,"./lib/ConnectView":10,"./lib/LoadingView":11}],9:[function(require,module,exports){
+},{"../lib/TransportWebSocket":5,"../lib/contact":6,"./lib/ChatView":9,"./lib/ConnectView":10,"./lib/LoadingView":11}],9:[function(require,module,exports){
 "use strict";
 var util = require("util"),
     Transform = require("stream").Transform,
     Message = require("../../lib/Message"),
-    global = require("../../lib/global");
+    contact = require("../../lib/contact");
 
 module.exports = ChatView;
 
@@ -296,7 +295,7 @@ function ChatView(options){
 
     $("#inputForm").addEventListener("submit", function(e){
         e.preventDefault();
-        self._writeLine(global.user + ": " + message.value);
+        self._writeLine(contact.user + ": " + message.value);
         self.push(new Message({ txt: message.value }))
         message.value = "";
         self.focus();
@@ -335,7 +334,7 @@ ChatView.prototype._transform = function(msg, enc, done){
     done();
 };
 
-},{"../../lib/Message":2,"../../lib/global":6,"stream":19,"util":27}],10:[function(require,module,exports){
+},{"../../lib/Message":2,"../../lib/contact":6,"stream":19,"util":27}],10:[function(require,module,exports){
 "use strict";
 var util = require("util"),
     EventEmitter = require("events").EventEmitter;

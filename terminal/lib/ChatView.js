@@ -9,6 +9,7 @@ var readline = require("readline"),
 module.exports = ChatView;
 
 function ChatView(options){
+    if (!(this instanceof ChatView)) return new ChatView(options);
     options = options || {};
     options.objectMode = true;
     Transform.call(this, options)
@@ -23,6 +24,10 @@ function ChatView(options){
     
     contact.session.on("connected", function(){
         rl.prompt();    
+    });
+    
+    rl.on("SIGINT", function(){
+        contact.session.close();
     });
 }
 util.inherits(ChatView, Transform);
