@@ -1,9 +1,11 @@
 #!/usr/bin/env node
 "use strict";
+require("console-dope");
 var Thing = require("nature").Thing,
     ChatView = require("./lib/ChatView"),
     TransportWebSocket = require("../lib/TransportWebSocket"),
-    contact = require("../lib/contact");
+    contact = require("../lib/contact"),
+    Notifications = require("../lib/Notifications");
 
 var argv = new Thing()
     .define({ name: "user", type: "string", alias: "u", value: "Lloyd" })
@@ -24,6 +26,7 @@ session.on("disconnected", function(){
 });
 
 session.pipe(ChatView())
+    .pipe(Notifications())
     .pipe(session);
     
 /*

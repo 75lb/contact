@@ -54,7 +54,11 @@ Connection.prototype.write = function(msg){
     }
 };
 Connection.prototype.close = function(){
-    this._socket.close();
+    if (this.state === 1){
+        this._socket.close();
+    } else {
+        this.emit("close");
+    }
 };
 
 },{"./Message":2,"events":15,"util":27}],2:[function(require,module,exports){
