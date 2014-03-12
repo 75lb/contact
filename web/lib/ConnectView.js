@@ -6,7 +6,7 @@ module.exports = ConnectView;
 
 var $ = document.querySelector.bind(document);
 
-function ConnectView(){
+function ConnectView(options){
     var self = this,
         form = $("#connectForm"),
         connect = $("#connect"),
@@ -26,6 +26,7 @@ function ConnectView(){
     
     form.addEventListener("submit", function(e){
         e.preventDefault();
+        if (options.requestNotificationPermission) options.requestNotificationPermission();
         var name = username.value;
         if (self.connected){
             self.emit("disconnect");

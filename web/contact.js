@@ -3,12 +3,13 @@ var TransportWebSocket = require("../lib/TransportWebSocket"),
     ChatView = require("./lib/ChatView"),
     ConnectView = require("./lib/ConnectView"),
     LoadingView = require("./lib/LoadingView"),
-    contact = require("../lib/contact");
+    contact = require("../lib/contact"),
+    Notifications = require("../lib/Notifications");
 
 var transport = new TransportWebSocket(),
     options = {  host: "serene-stream-2466.herokuapp.com" },
     view = {
-        connect: new ConnectView(),
+        connect: new ConnectView({ requestNotificationPermission: Notifications.requestPermission }),
         chat: new ChatView(),
         loading: new LoadingView()
     };
@@ -27,11 +28,21 @@ view.connect.on("connect-as", function(username){
         view.connect.setConnected(true);
         view.chat.enabled(true);
 
-        session.pipe(view.chat).pipe(session);
+        session
+            .pipe(Notifications())
+            .pipe(view.chat)
+            .pipe(session);
+
         view.chat.focus();
     });
 
     session.on("disconnected", function(){
+        view.chat.enabled(false);
+        view.connect.setConnected(false);
+    });
+    session.on("error", function(err){
+        console.log("SESSION ERROR");
+        console.log(err);
         view.chat.enabled(false);
         view.connect.setConnected(false);
     });

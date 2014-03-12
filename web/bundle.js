@@ -54,6 +54,7 @@ Connection.prototype.write = function(msg){
     }
 };
 Connection.prototype.close = function(){
+    // console.dir(this.state)
     if (this.state === 1){
         this._socket.close();
     } else {
@@ -61,7 +62,7 @@ Connection.prototype.close = function(){
     }
 };
 
-},{"./Message":2,"events":15,"util":27}],2:[function(require,module,exports){
+},{"./Message":2,"events":18,"util":30}],2:[function(require,module,exports){
 var contact = require("./contact");
 
 module.exports = Message;
@@ -74,7 +75,45 @@ function Message(options){
     this.date = Date.now();
 }
 
-},{"./contact":6}],3:[function(require,module,exports){
+},{"./contact":7}],3:[function(require,module,exports){
+"use strict";
+var util = require("util"),
+    Message = require("./Message"),
+    contact = require("./contact"),
+    Transform = require("stream").Transform,
+    Notification = require("notification-dope");
+
+module.exports = Notifications;
+
+function Notifications(options){
+    if (!(this instanceof Notifications)) return new Notifications(options);
+    options = options || {};
+    options.objectMode = true;
+    Transform.call(this, options)
+ }
+util.inherits(Notifications, Transform);
+Notifications.requestPermission = Notification.requestPermission;
+
+Notifications.prototype._transform = function(msg, enc, done){
+    if (msg.action === "connected" && msg.received){
+        new Notification({ 
+            title: msg.user, 
+            message: "came online",
+            sound: "Ping"
+        });
+    }
+    if (msg.action === "disconnected" && msg.received){
+        new Notification({ 
+            title: msg.user, 
+            message: "went offline",
+            sound: "Hero"
+        });
+    }
+    this.push(msg);
+    done();
+};
+
+},{"./Message":2,"./contact":7,"notification-dope":8,"stream":22,"util":30}],4:[function(require,module,exports){
 "use strict";
 var EventEmitter = require("events").EventEmitter,
     stream = require("stream"),
@@ -106,6 +145,9 @@ function Session(options){
     this.connection.on("close", function(){
         self.emit("disconnected");
     });
+    this.connection.on("error", function(err){
+        self.emit("error", err);
+    });
 }
 util.inherits(Session, Duplex);
 Session.prototype._read = function(){};
@@ -118,7 +160,7 @@ Session.prototype.close = function(){
     this.connection.close();
 };
 
-},{"./Message":2,"events":15,"stream":19,"util":27}],4:[function(require,module,exports){
+},{"./Message":2,"events":18,"stream":22,"util":30}],5:[function(require,module,exports){
 "use strict";
 module.exports = Transport;
 
@@ -155,7 +197,7 @@ Transport.prototype.connect = function(options, callback){
     throw new Error("transport.listen() not implemented");
 };
 
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 "use strict";
 var util = require("util"),
     Transport = require("./Transport"),
@@ -183,11 +225,51 @@ function TransportWebSocket(){
 }
 util.inherits(TransportWebSocket, Transport);
 
-},{"./Connection":1,"./Session":3,"./Transport":4,"util":27,"ws":7}],6:[function(require,module,exports){
+},{"./Connection":1,"./Session":4,"./Transport":5,"util":30,"ws":9}],7:[function(require,module,exports){
 exports.session = null;
 exports.user = null;
 
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
+var spawn = require("child_process").spawn,
+    EventEmitter = require("events").EventEmitter,
+    WebNotification,
+    util = require("util"),
+    permission;
+
+if (typeof window !== "undefined"){
+    WebNotification = window.Notification;
+}
+
+module.exports = Notification;
+
+function Notification(options){
+    var self = this;
+    if (WebNotification){
+        if (permission === "granted"){
+            new WebNotification(options.title, { body: options.message });
+        }
+    } else {
+        var handle = spawn("terminal-notifier", [ 
+            "-title", options.title, 
+            "-message", options.message,
+            "-sound", options.sound
+        ]);
+        handle.on("error", function(err){
+            self.emit("error", err);
+        });
+    }
+}
+util.inherits(Notification, EventEmitter);
+
+Notification.requestPermission = function(){
+    if (WebNotification){
+        WebNotification.requestPermission(function(perms){
+            permission = perms;
+        });    
+    }
+};
+
+},{"child_process":14,"events":18,"util":30}],9:[function(require,module,exports){
 
 /**
  * Module dependencies.
@@ -232,18 +314,19 @@ function ws(uri, protocols, opts) {
 
 if (WebSocket) ws.prototype = WebSocket.prototype;
 
-},{}],8:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 "use strict";
 var TransportWebSocket = require("../lib/TransportWebSocket"),
     ChatView = require("./lib/ChatView"),
     ConnectView = require("./lib/ConnectView"),
     LoadingView = require("./lib/LoadingView"),
-    contact = require("../lib/contact");
+    contact = require("../lib/contact"),
+    Notifications = require("../lib/Notifications");
 
 var transport = new TransportWebSocket(),
     options = {  host: "serene-stream-2466.herokuapp.com" },
     view = {
-        connect: new ConnectView(),
+        connect: new ConnectView({ requestNotificationPermission: Notifications.requestPermission }),
         chat: new ChatView(),
         loading: new LoadingView()
     };
@@ -262,11 +345,21 @@ view.connect.on("connect-as", function(username){
         view.connect.setConnected(true);
         view.chat.enabled(true);
 
-        session.pipe(view.chat).pipe(session);
+        session
+            .pipe(Notifications())
+            .pipe(view.chat)
+            .pipe(session);
+
         view.chat.focus();
     });
 
     session.on("disconnected", function(){
+        view.chat.enabled(false);
+        view.connect.setConnected(false);
+    });
+    session.on("error", function(err){
+        console.log("SESSION ERROR");
+        console.log(err);
         view.chat.enabled(false);
         view.connect.setConnected(false);
     });
@@ -276,7 +369,7 @@ view.connect.on("connect-as", function(username){
     });
 });
 
-},{"../lib/TransportWebSocket":5,"../lib/contact":6,"./lib/ChatView":9,"./lib/ConnectView":10,"./lib/LoadingView":11}],9:[function(require,module,exports){
+},{"../lib/Notifications":3,"../lib/TransportWebSocket":6,"../lib/contact":7,"./lib/ChatView":11,"./lib/ConnectView":12,"./lib/LoadingView":13}],11:[function(require,module,exports){
 "use strict";
 var util = require("util"),
     Transform = require("stream").Transform,
@@ -338,7 +431,7 @@ ChatView.prototype._transform = function(msg, enc, done){
     done();
 };
 
-},{"../../lib/Message":2,"../../lib/contact":6,"stream":19,"util":27}],10:[function(require,module,exports){
+},{"../../lib/Message":2,"../../lib/contact":7,"stream":22,"util":30}],12:[function(require,module,exports){
 "use strict";
 var util = require("util"),
     EventEmitter = require("events").EventEmitter;
@@ -347,7 +440,7 @@ module.exports = ConnectView;
 
 var $ = document.querySelector.bind(document);
 
-function ConnectView(){
+function ConnectView(options){
     var self = this,
         form = $("#connectForm"),
         connect = $("#connect"),
@@ -367,6 +460,7 @@ function ConnectView(){
     
     form.addEventListener("submit", function(e){
         e.preventDefault();
+        if (options.requestNotificationPermission) options.requestNotificationPermission();
         var name = username.value;
         if (self.connected){
             self.emit("disconnect");
@@ -381,7 +475,7 @@ function ConnectView(){
 }
 util.inherits(ConnectView, EventEmitter);
 
-},{"events":15,"util":27}],11:[function(require,module,exports){
+},{"events":18,"util":30}],13:[function(require,module,exports){
 "use strict";
 var util = require("util"),
     EventEmitter = require("events").EventEmitter;
@@ -398,7 +492,9 @@ function LoadingView(){
 }
 util.inherits(LoadingView, EventEmitter);
 
-},{"events":15,"util":27}],12:[function(require,module,exports){
+},{"events":18,"util":30}],14:[function(require,module,exports){
+
+},{}],15:[function(require,module,exports){
 /**
  * The buffer module from node.js, for the browser.
  *
@@ -1511,7 +1607,7 @@ function assert (test, message) {
   if (!test) throw new Error(message || 'Failed assertion')
 }
 
-},{"base64-js":13,"ieee754":14}],13:[function(require,module,exports){
+},{"base64-js":16,"ieee754":17}],16:[function(require,module,exports){
 var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
 ;(function (exports) {
@@ -1634,7 +1730,7 @@ var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 	module.exports.fromByteArray = uint8ToBase64
 }())
 
-},{}],14:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 exports.read = function(buffer, offset, isLE, mLen, nBytes) {
   var e, m,
       eLen = nBytes * 8 - mLen - 1,
@@ -1720,7 +1816,7 @@ exports.write = function(buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128;
 };
 
-},{}],15:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -2022,7 +2118,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],16:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -2047,7 +2143,7 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],17:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -2102,7 +2198,7 @@ process.chdir = function (dir) {
     throw new Error('process.chdir is not supported');
 };
 
-},{}],18:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -2176,7 +2272,7 @@ function onend() {
   });
 }
 
-},{"./readable.js":22,"./writable.js":24,"inherits":16,"process/browser.js":20}],19:[function(require,module,exports){
+},{"./readable.js":25,"./writable.js":27,"inherits":19,"process/browser.js":23}],22:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -2305,9 +2401,9 @@ Stream.prototype.pipe = function(dest, options) {
   return dest;
 };
 
-},{"./duplex.js":18,"./passthrough.js":21,"./readable.js":22,"./transform.js":23,"./writable.js":24,"events":15,"inherits":16}],20:[function(require,module,exports){
-module.exports=require(17)
-},{}],21:[function(require,module,exports){
+},{"./duplex.js":21,"./passthrough.js":24,"./readable.js":25,"./transform.js":26,"./writable.js":27,"events":18,"inherits":19}],23:[function(require,module,exports){
+module.exports=require(20)
+},{}],24:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -2350,7 +2446,7 @@ PassThrough.prototype._transform = function(chunk, encoding, cb) {
   cb(null, chunk);
 };
 
-},{"./transform.js":23,"inherits":16}],22:[function(require,module,exports){
+},{"./transform.js":26,"inherits":19}],25:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -3287,7 +3383,7 @@ function indexOf (xs, x) {
 }
 
 }).call(this,require("/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js"))
-},{"./index.js":19,"/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js":17,"buffer":12,"events":15,"inherits":16,"process/browser.js":20,"string_decoder":25}],23:[function(require,module,exports){
+},{"./index.js":22,"/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js":20,"buffer":15,"events":18,"inherits":19,"process/browser.js":23,"string_decoder":28}],26:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -3493,7 +3589,7 @@ function done(stream, er) {
   return stream.push(null);
 }
 
-},{"./duplex.js":18,"inherits":16}],24:[function(require,module,exports){
+},{"./duplex.js":21,"inherits":19}],27:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -3881,7 +3977,7 @@ function endWritable(stream, state, cb) {
   state.ended = true;
 }
 
-},{"./index.js":19,"buffer":12,"inherits":16,"process/browser.js":20}],25:[function(require,module,exports){
+},{"./index.js":22,"buffer":15,"inherits":19,"process/browser.js":23}],28:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -4074,14 +4170,14 @@ function base64DetectIncompleteChar(buffer) {
   return incomplete;
 }
 
-},{"buffer":12}],26:[function(require,module,exports){
+},{"buffer":15}],29:[function(require,module,exports){
 module.exports = function isBuffer(arg) {
   return arg && typeof arg === 'object'
     && typeof arg.copy === 'function'
     && typeof arg.fill === 'function'
     && typeof arg.readUInt8 === 'function';
 }
-},{}],27:[function(require,module,exports){
+},{}],30:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -4671,4 +4767,4 @@ function hasOwnProperty(obj, prop) {
 }
 
 }).call(this,require("/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js"),typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./support/isBuffer":26,"/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js":17,"inherits":16}]},{},[8])
+},{"./support/isBuffer":29,"/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js":20,"inherits":19}]},{},[10])

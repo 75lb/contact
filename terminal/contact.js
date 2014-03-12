@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 "use strict";
-require("console-dope");
 var Thing = require("nature").Thing,
+    dope = require("console-dope"),
     ChatView = require("./lib/ChatView"),
     TransportWebSocket = require("../lib/TransportWebSocket"),
     contact = require("../lib/contact"),
@@ -23,6 +23,10 @@ contact.session = session;
 session.on("disconnected", function(){
     console.log();
     process.exit(0);
+});
+session.on("error", function(err){
+    console.log("SESSION ERROR");
+    console.dir(err);
 });
 
 session.pipe(ChatView())
