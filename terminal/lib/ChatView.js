@@ -2,7 +2,7 @@
 var readline = require("readline"),
     util = require("util"),
     Message = require("../../lib/Message"),
-    global = require("../../lib/global"),
+    contact = require("../../lib/contact"),
     Transform = require("stream").Transform,
     rl = readline.createInterface({ input: process.stdin, output: process.stdout });
 
@@ -15,13 +15,13 @@ function ChatView(options){
     var self = this;
 
     rl.on("line", function(line){
-        if (global.session.connection.state === 1){
-            self._writeLine(global.user + ": " + line, true);
+        if (contact.session.connection.state === 1){
+            self._writeLine(contact.user + ": " + line, true);
             self.push(new Message({ txt: line }));
         }
     });
     
-    global.session.on("connected", function(){
+    contact.session.on("connected", function(){
         rl.prompt();    
     });
 }

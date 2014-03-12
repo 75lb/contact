@@ -2,7 +2,7 @@
 var util = require("util"),
     Transform = require("stream").Transform,
     Message = require("../../lib/Message"),
-    global = require("../../lib/global");
+    contact = require("../../lib/contact");
 
 module.exports = ChatView;
 
@@ -20,7 +20,7 @@ function ChatView(options){
 
     $("#inputForm").addEventListener("submit", function(e){
         e.preventDefault();
-        self._writeLine(global.user + ": " + message.value);
+        self._writeLine(contact.user + ": " + message.value);
         self.push(new Message({ txt: message.value }))
         message.value = "";
         self.focus();

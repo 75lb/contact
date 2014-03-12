@@ -3,7 +3,7 @@
 var Thing = require("nature").Thing,
     ChatView = require("./lib/ChatView"),
     TransportWebSocket = require("../lib/TransportWebSocket"),
-    global = require("../lib/global"),
+    contact = require("../lib/contact"),
     monitor = require("stream-monitor"),
     url = "serene-stream-2466.herokuapp.com";
 
@@ -17,11 +17,12 @@ console.log("Connecting to", url);
 
 var session = transport.connect({ host: url });
 // monitor(session);
-global.user = argv.user;
-global.session = session;
+contact.user = argv.user;
+contact.session = session;
 
-process.on("SIGINT", function(){
-    session.close();
+process.on("exit", function(){
+    console.log("process exiting")
+    // session.close();
 });
 session.on("disconnected", function(){
     console.log();

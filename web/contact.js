@@ -3,7 +3,7 @@ var TransportWebSocket = require("../lib/TransportWebSocket"),
     ChatView = require("./lib/ChatView"),
     ConnectView = require("./lib/ConnectView"),
     LoadingView = require("./lib/LoadingView"),
-    global = require("../lib/global");
+    contact = require("../lib/contact");
 
 var transport = new TransportWebSocket(),
     options = {  host: "serene-stream-2466.herokuapp.com" },
@@ -20,8 +20,8 @@ view.connect.on("connect-as", function(username){
 
     var session = transport.connect(options);
     session.on("connected", function(){
-        global.user = username;
-        global.session = session;
+        contact.user = username;
+        contact.session = session;
 
         view.loading.loading(false);
         view.connect.setConnected(true);
