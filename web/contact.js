@@ -1,8 +1,12 @@
 "use strict";
+/**
+Web client 
+*/
 var TransportWebSocket = require("../lib/TransportWebSocket"),
     ChatView = require("./lib/ChatView"),
     ConnectView = require("./lib/ConnectView"),
     LoadingView = require("./lib/LoadingView"),
+    Visibility = require("./lib/Visibility"),
     contact = require("../lib/contact"),
     Notifications = require("../lib/Notifications");
 
@@ -29,8 +33,9 @@ view.connect.on("connect-as", function(username){
         view.chat.enabled(true);
 
         session
-            .pipe(Notifications())
+            .pipe(Visibility())
             .pipe(view.chat)
+            .pipe(Notifications())
             .pipe(session);
 
         view.chat.focus();

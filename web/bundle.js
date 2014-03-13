@@ -22,9 +22,7 @@ function Connection(websocket){
         self.emit("close");
     };
     websocket.onmessage = function(msg){
-        var data = JSON.parse(msg.data);
-        data.received = true;
-        self.emit("data", data);
+        self.emit("data", msg.data);
     };
     websocket.onerror = function(err){
         self.emit("error", err);
@@ -54,7 +52,6 @@ Connection.prototype.write = function(msg){
     }
 };
 Connection.prototype.close = function(){
-    // console.dir(this.state)
     if (this.state === 1){
         this._socket.close();
     } else {
@@ -62,7 +59,7 @@ Connection.prototype.close = function(){
     }
 };
 
-},{"./Message":2,"events":18,"util":30}],2:[function(require,module,exports){
+},{"./Message":2,"events":19,"util":31}],2:[function(require,module,exports){
 var contact = require("./contact");
 
 module.exports = Message;
@@ -95,25 +92,19 @@ util.inherits(Notifications, Transform);
 Notifications.requestPermission = Notification.requestPermission;
 
 Notifications.prototype._transform = function(msg, enc, done){
-    if (msg.action === "connected" && msg.received){
+    if (msg.notify){
         new Notification({ 
-            title: msg.user, 
-            message: "came online",
+            title: msg.notify.title, 
+            message: msg.notify.body,
             sound: "Ping"
         });
     }
-    if (msg.action === "disconnected" && msg.received){
-        new Notification({ 
-            title: msg.user, 
-            message: "went offline",
-            sound: "Hero"
-        });
-    }
+    delete msg.notify;
     this.push(msg);
     done();
 };
 
-},{"./Message":2,"./contact":7,"notification-dope":8,"stream":22,"util":30}],4:[function(require,module,exports){
+},{"./Message":2,"./contact":7,"notification-dope":8,"stream":23,"util":31}],4:[function(require,module,exports){
 "use strict";
 var EventEmitter = require("events").EventEmitter,
     stream = require("stream"),
@@ -135,8 +126,16 @@ function Session(options){
     var self = this;
     this.connection = options.connection;
     
-    this.connection.on("data", function(data){
-        self.push(data);
+    this.connection.on("data", function(msg){
+        msg = JSON.parse(msg);
+        msg.received = true;
+        if (msg.action === "connected"){
+            msg.notify = { title: msg.user + " came online" };
+        }
+        if (msg.action === "disconnected"){
+            msg.notify = { title: msg.user + " went offline" };
+        }
+        self.push(msg);
     });
     this.connection.on("open", function(){
         self.emit("connected");
@@ -160,7 +159,7 @@ Session.prototype.close = function(){
     this.connection.close();
 };
 
-},{"./Message":2,"events":18,"stream":22,"util":30}],5:[function(require,module,exports){
+},{"./Message":2,"events":19,"stream":23,"util":31}],5:[function(require,module,exports){
 "use strict";
 module.exports = Transport;
 
@@ -225,7 +224,7 @@ function TransportWebSocket(){
 }
 util.inherits(TransportWebSocket, Transport);
 
-},{"./Connection":1,"./Session":4,"./Transport":5,"util":30,"ws":9}],7:[function(require,module,exports){
+},{"./Connection":1,"./Session":4,"./Transport":5,"util":31,"ws":9}],7:[function(require,module,exports){
 exports.session = null;
 exports.user = null;
 
@@ -243,6 +242,10 @@ if (typeof window !== "undefined"){
 module.exports = Notification;
 
 function Notification(options){
+    options.title = options.title || "";
+    options.message = options.message || "";
+    options.sound = options.sound || "";
+    
     var self = this;
     if (WebNotification){
         if (permission === "granted"){
@@ -269,7 +272,7 @@ Notification.requestPermission = function(){
     }
 };
 
-},{"child_process":14,"events":18,"util":30}],9:[function(require,module,exports){
+},{"child_process":15,"events":19,"util":31}],9:[function(require,module,exports){
 
 /**
  * Module dependencies.
@@ -316,10 +319,14 @@ if (WebSocket) ws.prototype = WebSocket.prototype;
 
 },{}],10:[function(require,module,exports){
 "use strict";
+/**
+Web client 
+*/
 var TransportWebSocket = require("../lib/TransportWebSocket"),
     ChatView = require("./lib/ChatView"),
     ConnectView = require("./lib/ConnectView"),
     LoadingView = require("./lib/LoadingView"),
+    Visibility = require("./lib/Visibility"),
     contact = require("../lib/contact"),
     Notifications = require("../lib/Notifications");
 
@@ -346,8 +353,9 @@ view.connect.on("connect-as", function(username){
         view.chat.enabled(true);
 
         session
-            .pipe(Notifications())
+            .pipe(Visibility())
             .pipe(view.chat)
+            .pipe(Notifications())
             .pipe(session);
 
         view.chat.focus();
@@ -369,7 +377,7 @@ view.connect.on("connect-as", function(username){
     });
 });
 
-},{"../lib/Notifications":3,"../lib/TransportWebSocket":6,"../lib/contact":7,"./lib/ChatView":11,"./lib/ConnectView":12,"./lib/LoadingView":13}],11:[function(require,module,exports){
+},{"../lib/Notifications":3,"../lib/TransportWebSocket":6,"../lib/contact":7,"./lib/ChatView":11,"./lib/ConnectView":12,"./lib/LoadingView":13,"./lib/Visibility":14}],11:[function(require,module,exports){
 "use strict";
 var util = require("util"),
     Transform = require("stream").Transform,
@@ -431,7 +439,7 @@ ChatView.prototype._transform = function(msg, enc, done){
     done();
 };
 
-},{"../../lib/Message":2,"../../lib/contact":7,"stream":22,"util":30}],12:[function(require,module,exports){
+},{"../../lib/Message":2,"../../lib/contact":7,"stream":23,"util":31}],12:[function(require,module,exports){
 "use strict";
 var util = require("util"),
     EventEmitter = require("events").EventEmitter;
@@ -475,7 +483,7 @@ function ConnectView(options){
 }
 util.inherits(ConnectView, EventEmitter);
 
-},{"events":18,"util":30}],13:[function(require,module,exports){
+},{"events":19,"util":31}],13:[function(require,module,exports){
 "use strict";
 var util = require("util"),
     EventEmitter = require("events").EventEmitter;
@@ -492,9 +500,36 @@ function LoadingView(){
 }
 util.inherits(LoadingView, EventEmitter);
 
-},{"events":18,"util":30}],14:[function(require,module,exports){
+},{"events":19,"util":31}],14:[function(require,module,exports){
+"use strict";
+var util = require("util"),
+    contact = require("../../lib/contact"),
+    Transform = require("stream").Transform;
 
-},{}],15:[function(require,module,exports){
+module.exports = Visibility;
+
+function Visibility(options){
+    if (!(this instanceof Visibility)) return new Visibility(options);
+    options = options || {};
+    options.objectMode = true;
+    Transform.call(this, options)
+ }
+util.inherits(Visibility, Transform);
+
+Visibility.prototype._transform = function(msg, enc, done){
+    if (msg.txt && document.hidden){
+        msg.notify = {
+            title: "New messages",
+            body: "from " + msg.user
+        };
+    }
+    this.push(msg);
+    done();
+};
+
+},{"../../lib/contact":7,"stream":23,"util":31}],15:[function(require,module,exports){
+
+},{}],16:[function(require,module,exports){
 /**
  * The buffer module from node.js, for the browser.
  *
@@ -1607,7 +1642,7 @@ function assert (test, message) {
   if (!test) throw new Error(message || 'Failed assertion')
 }
 
-},{"base64-js":16,"ieee754":17}],16:[function(require,module,exports){
+},{"base64-js":17,"ieee754":18}],17:[function(require,module,exports){
 var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
 ;(function (exports) {
@@ -1730,7 +1765,7 @@ var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 	module.exports.fromByteArray = uint8ToBase64
 }())
 
-},{}],17:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 exports.read = function(buffer, offset, isLE, mLen, nBytes) {
   var e, m,
       eLen = nBytes * 8 - mLen - 1,
@@ -1816,7 +1851,7 @@ exports.write = function(buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128;
 };
 
-},{}],18:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -2118,7 +2153,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],19:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -2143,7 +2178,7 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],20:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -2198,7 +2233,7 @@ process.chdir = function (dir) {
     throw new Error('process.chdir is not supported');
 };
 
-},{}],21:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -2272,7 +2307,7 @@ function onend() {
   });
 }
 
-},{"./readable.js":25,"./writable.js":27,"inherits":19,"process/browser.js":23}],22:[function(require,module,exports){
+},{"./readable.js":26,"./writable.js":28,"inherits":20,"process/browser.js":24}],23:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -2401,9 +2436,9 @@ Stream.prototype.pipe = function(dest, options) {
   return dest;
 };
 
-},{"./duplex.js":21,"./passthrough.js":24,"./readable.js":25,"./transform.js":26,"./writable.js":27,"events":18,"inherits":19}],23:[function(require,module,exports){
-module.exports=require(20)
-},{}],24:[function(require,module,exports){
+},{"./duplex.js":22,"./passthrough.js":25,"./readable.js":26,"./transform.js":27,"./writable.js":28,"events":19,"inherits":20}],24:[function(require,module,exports){
+module.exports=require(21)
+},{}],25:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -2446,7 +2481,7 @@ PassThrough.prototype._transform = function(chunk, encoding, cb) {
   cb(null, chunk);
 };
 
-},{"./transform.js":26,"inherits":19}],25:[function(require,module,exports){
+},{"./transform.js":27,"inherits":20}],26:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -3383,7 +3418,7 @@ function indexOf (xs, x) {
 }
 
 }).call(this,require("/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js"))
-},{"./index.js":22,"/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js":20,"buffer":15,"events":18,"inherits":19,"process/browser.js":23,"string_decoder":28}],26:[function(require,module,exports){
+},{"./index.js":23,"/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js":21,"buffer":16,"events":19,"inherits":20,"process/browser.js":24,"string_decoder":29}],27:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -3589,7 +3624,7 @@ function done(stream, er) {
   return stream.push(null);
 }
 
-},{"./duplex.js":21,"inherits":19}],27:[function(require,module,exports){
+},{"./duplex.js":22,"inherits":20}],28:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -3977,7 +4012,7 @@ function endWritable(stream, state, cb) {
   state.ended = true;
 }
 
-},{"./index.js":22,"buffer":15,"inherits":19,"process/browser.js":23}],28:[function(require,module,exports){
+},{"./index.js":23,"buffer":16,"inherits":20,"process/browser.js":24}],29:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -4170,14 +4205,14 @@ function base64DetectIncompleteChar(buffer) {
   return incomplete;
 }
 
-},{"buffer":15}],29:[function(require,module,exports){
+},{"buffer":16}],30:[function(require,module,exports){
 module.exports = function isBuffer(arg) {
   return arg && typeof arg === 'object'
     && typeof arg.copy === 'function'
     && typeof arg.fill === 'function'
     && typeof arg.readUInt8 === 'function';
 }
-},{}],30:[function(require,module,exports){
+},{}],31:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -4767,4 +4802,4 @@ function hasOwnProperty(obj, prop) {
 }
 
 }).call(this,require("/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js"),typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./support/isBuffer":29,"/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js":20,"inherits":19}]},{},[10])
+},{"./support/isBuffer":30,"/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js":21,"inherits":20}]},{},[10])

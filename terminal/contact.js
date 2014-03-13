@@ -1,5 +1,8 @@
 #!/usr/bin/env node
 "use strict";
+/**
+Terminal client 
+*/
 var Thing = require("nature").Thing,
     dope = require("console-dope"),
     ChatView = require("./lib/ChatView"),
@@ -14,19 +17,19 @@ var argv = new Thing()
 
 var transport = new TransportWebSocket();
 
-console.log("Connecting to", argv.server);
+dope.log("Connecting to", argv.server);
 
 var session = transport.connect({ host: argv.server });
 contact.user = argv.user;
 contact.session = session;
 
 session.on("disconnected", function(){
-    console.log();
+    dope.clearLine.column(1);
     process.exit(0);
 });
 session.on("error", function(err){
-    console.log("SESSION ERROR");
-    console.dir(err);
+    dope.log("SESSION ERROR");
+    dope.dir(err);
 });
 
 session.pipe(ChatView())
