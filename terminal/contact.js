@@ -3,17 +3,17 @@
 /**
 Terminal client 
 */
-var Thing = require("nature").Thing,
+var cliArgs = require("command-line-args"),
     dope = require("console-dope"),
     ChatView = require("./lib/ChatView"),
     TransportWebSocket = require("../lib/TransportWebSocket"),
     contact = require("../lib/contact"),
     Notifications = require("../lib/Notifications");
 
-var argv = new Thing()
-    .define({ name: "user", type: "string", alias: "u", value: "Lloyd" })
-    .define({ name: "server", type: "string", alias: "s", value: "serene-stream-2466.herokuapp.com" })
-    .set(process.argv);    
+var argv = cliArgs([
+    { name: "user", type: String, alias: "u", value: "Lloyd" },
+    { name: "server", type: String, alias: "s", value: "serene-stream-2466.herokuapp.com" }
+]).parse();
 
 var transport = new TransportWebSocket();
 
@@ -29,7 +29,7 @@ session.on("disconnected", function(){
 });
 session.on("error", function(err){
     dope.log("SESSION ERROR");
-    dope.dir(err);
+    console.dir(err);
 });
 
 session.pipe(ChatView())
