@@ -2,14 +2,14 @@
   "name": "contact",
   "version": "0.2.4",
   "description": "private, one-to-one or many-to-many command line chat",
-  "bin": "terminal/contact.js",
+  "bin": "bin/contact.js",
   "repository": "https://github.com/75lb/contact",
   "author": "Lloyd Brookes",
   "dependencies": {
-    "command-line-args": "^0.2.3",
+    "command-line-args": "~0.5.3",
     "console-dope": "~0.3.0",
     "notification-dope": "~0.0.0",
-    "ws": "~0.4.31"
+    "ws": "~0.6.3"
   },
   "devDependencies": {
     "wardrobe": "~0.0.1"

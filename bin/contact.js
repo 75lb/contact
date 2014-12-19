@@ -1,8 +1,6 @@
 #!/usr/bin/env node
 "use strict";
-/**
-Terminal client 
-*/
+
 var cliArgs = require("command-line-args"),
     dope = require("console-dope"),
     ChatView = require("./lib/ChatView"),
@@ -27,14 +25,16 @@ session.on("disconnected", function(){
     dope.clearLine.column(1);
     process.exit(0);
 });
-session.on("error", function(err){
-    dope.log("SESSION ERROR");
-    console.dir(err);
-});
+session.on("error", handleError);
 
-session.pipe(ChatView())
-    .pipe(Notifications())
-    .pipe(session);
+function handleError(err){
+    dope.error("SESSION ERROR");
+    console.dir(err);
+}
+
+session.pipe(ChatView()).on("error", handleError)
+    .pipe(Notifications()).on("error", handleError)
+    .pipe(session).on("error", handleError);
     
 /*
 chat history, presence (arrived, left), /me, /who (is online), formatting, ssl, /info (about connection, connected users and their IPS), /ban, /kick, connection keep-alive, 

@@ -8,6 +8,9 @@ var readline = require("readline"),
 
 module.exports = ChatView;
 
+/**
+@extends Transform
+*/
 function ChatView(options){
     if (!(this instanceof ChatView)) return new ChatView(options);
     options = options || {};
@@ -17,7 +20,7 @@ function ChatView(options){
 
     rl.on("line", function(line){
         if (contact.session.connection.state === 1){
-            self._writeLine(contact.user + ": " + line, true);
+            writeLine(contact.user + ": " + line, true);
             self.push(new Message({ txt: line }));
         }
     });
@@ -32,7 +35,19 @@ function ChatView(options){
 }
 util.inherits(ChatView, Transform);
 
-ChatView.prototype._writeLine = function(line, prevLine){
+ChatView.prototype._transform = function(msg, enc, done){
+    if (msg.txt){
+        writeLine(msg.user + ": " + msg.txt);
+    } else if (msg.action){
+        writeLine(msg.user + " " + msg.action);
+    } else {
+        // writeLine(JSON.stringify(msg));
+    }
+    this.push(msg);
+    done();
+};
+
+function writeLine(line, prevLine){
     rl.pause();
     if (prevLine){
         readline.moveCursor(process.stdout, 0, -1);
@@ -42,16 +57,4 @@ ChatView.prototype._writeLine = function(line, prevLine){
     console.log(line.toString());
     rl.prompt(true);
     rl.resume();
-};
-
-ChatView.prototype._transform = function(msg, enc, done){
-    if (msg.txt){
-        this._writeLine(msg.user + ": " + msg.txt);
-    } else if (msg.action){
-        this._writeLine(msg.user + " " + msg.action);
-    } else {
-        // this._writeLine(JSON.stringify(msg));
-    }
-    this.push(msg);
-    done();
-};
+}
