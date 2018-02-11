@@ -1,46 +1,46 @@
 #!/usr/bin/env node
-"use strict";
+'use strict'
 
-var cliArgs = require("command-line-args"),
-    dope = require("console-dope"),
-    ChatView = require("./lib/ChatView"),
-    TransportWebSocket = require("../lib/TransportWebSocket"),
-    contact = require("../lib/contact"),
-    Notifications = require("../lib/Notifications");
+const cliArgs = require('command-line-args')
+const dope = require('console-dope')
+const ChatView = require('./lib/ChatView')
+const TransportWebSocket = require('../lib/TransportWebSocket')
+const contact = require('../lib/contact')
+const Notifications = require('../lib/Notifications')
 
-var argv = cliArgs([
-    { name: "user", type: String, alias: "u", value: "Lloyd" },
-    { name: "server", type: String, alias: "s", value: "serene-stream-2466.herokuapp.com" }
-]).parse();
+const argv = cliArgs([
+  { name: 'user', type: String, alias: 'u', defaultValue: 'Lloyd' },
+  { name: 'server', type: String, alias: 's', defaultValue: 'serene-stream-2466.herokuapp.com' }
+])
 
-var transport = new TransportWebSocket();
+const transport = new TransportWebSocket()
 
-dope.log("Connecting to", argv.server);
+console.log('Connecting to', argv.server)
 
-var session = transport.connect({ host: argv.server });
-contact.user = argv.user;
-contact.session = session;
+const session = transport.connect({ host: argv.server })
+contact.user = argv.user
+contact.session = session
 
-session.on("disconnected", function(){
-    dope.clearLine.column(1);
-    process.exit(0);
-});
-session.on("error", handleError);
+session.on('disconnected', function () {
+  dope.clearLine.column(1)
+  process.exit(0)
+})
+session.on('error', handleError)
 
-function handleError(err){
-    dope.error("SESSION ERROR");
-    console.dir(err);
+function handleError (err) {
+  dope.error('SESSION ERROR')
+  console.dir(err)
 }
 
-session.pipe(ChatView()).on("error", handleError)
-    .pipe(Notifications()).on("error", handleError)
-    .pipe(session).on("error", handleError);
-    
+session.pipe(ChatView()).on('error', handleError)
+  .pipe(Notifications()).on('error', handleError)
+  .pipe(session).on('error', handleError)
+
 /*
-chat history, presence (arrived, left), /me, /who (is online), formatting, ssl, /info (about connection, connected users and their IPS), /ban, /kick, connection keep-alive, 
+chat history, presence (arrived, left), /me, /who (is online), formatting, ssl, /info (about connection, connected users and their IPS), /ban, /kick, connection keep-alive,
 web client host in query string, notifications
 
-var transportWeb = new TransportWebSocket();
+const transportWeb = new TransportWebSocket();
 transportWeb.connect({ host: "blah"}, function(session){
     session            // { type: "message", data: { user: "A", msg: "you there?" }}
         .pipe(history) // { type: "message", data: { user: "A", msg: "you there?" }}
